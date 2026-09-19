@@ -604,7 +604,11 @@ export default function Transactions() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {referrals.map((ref) => {
+            {loadingReferrals ? (
+              <div className="col-span-full py-12 flex justify-center items-center">
+                <Loader2 className="w-8 h-8 animate-spin text-[#243cd6]" />
+              </div>
+            ) : referrals.map((ref) => {
               const eligibleCount = Number(ref.eligible_referrals || 0);
               const meetsCondition = eligibleCount >= 3;
               const isRefLoading = referralActionLoadingId === ref.request_id;
@@ -679,7 +683,7 @@ export default function Transactions() {
               );
             })}
 
-            {referrals.length === 0 && (
+            {!loadingReferrals && referrals.length === 0 && (
               <div className="col-span-1 lg:col-span-2 xl:col-span-3 border border-gray-200 border-dashed rounded-3xl p-12 flex flex-col items-center justify-center text-gray-500">
                 <CheckCircle2 className="w-8 h-8 opacity-50 mb-3 text-green-500" />
                 <p className="font-medium text-sm">All referral bonus withdrawals have been processed!</p>
