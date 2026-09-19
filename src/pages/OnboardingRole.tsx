@@ -1,94 +1,62 @@
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "@/store";
-import { setRole } from "@/features/registration/registrationSlice";
-import AuthLogo from "@/components/global/AuthLogo";
-import Container from "@/components/global/Container";
-import { User, Wrench } from "lucide-react";
-import { api } from "@/utils/axiosConfig";
-import { toast } from "sonner";
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import AuthLogo from '@/components/global/AuthLogo'
+import Container from '@/components/global/Container'
+import { User, Wrench } from 'lucide-react'
 
 export default function OnboardingRole() {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const navigate = useNavigate()
 
-  const role = useSelector((state: RootState) => state.registrationState.role);
+  const [role, setRole] = useState('')
 
   const handleContinue = async () => {
-    if (!role) return;
+    navigate(`/onboarding/${role}/upload`)
 
-    const mappedRole =
-      role === "professional" ? "SERVICE_PROVIDER" : "CUSTOMER";
-
-    try {
-      await api.post("/api/v1/onboard/", {
-        role: mappedRole,
-      });
-      navigate("/onboarding/upload-photo");
-    } catch (error: any) {
-      toast.error(error?.message);
-    }
-  };
+  }
 
   return (
     <Container className="flex items-center justify-center min-h-screen">
       <div className="w-full max-w-sm text-center">
-        <div className="w-max mx-auto mb-4">
-          <AuthLogo />
-        </div>
+        <AuthLogo />
 
         <h1 className="text-2xl font-bold">Choose Your Role</h1>
 
-        <p className="text-sm text-gray-500 mt-2 mb-8">
-          Tell us how you want to use the platform
-        </p>
-
-        <div className="space-y-4">
+        <div className="space-y-4 mt-8">
           <button
-            onClick={() => dispatch(setRole("customer"))}
-            className={`w-full border rounded-xl p-4 flex items-center gap-3 text-left transition
-            ${
-              role === "customer"
-                ? "border-primary bg-primary/5"
-                : "border-gray-200 hover:border-primary"
+            type="button"
+            onClick={() => setRole('customer')}
+            className={`w-full border-2 cursor-pointer hover:bg-gray-100 rounded-md p-4 flex gap-3 ${
+              role === 'customer' ? 'border-primary bg-gray-100' : ''
             }`}
           >
-            <User className="w-6 h-6 text-primary" />
-
+            <User />
             <div>
-              <p className="font-semibold">Hire a Service</p>
-              <p className="text-xs text-gray-500">
-                Find skilled professionals
-              </p>
+              <p className="font-semibold">Customer</p>
             </div>
           </button>
 
           <button
-            onClick={() => dispatch(setRole("professional"))}
-            className={`w-full border rounded-xl p-4 flex items-center gap-3 text-left transition
-            ${
-              role === "professional"
-                ? "border-primary bg-primary/5"
-                : "border-gray-200 hover:border-primary"
+            type="button"
+            onClick={() => setRole('professional')}
+            className={`w-full border-2 cursor-pointer hover:bg-gray-100 rounded-md p-4 flex gap-3 ${
+              role === 'professional' ? 'border-primary bg-gray-100' : ''
             }`}
           >
-            <Wrench className="w-6 h-6 text-primary" />
-
+            <Wrench />
             <div>
               <p className="font-semibold">Skilled Professional</p>
-              <p className="text-xs text-gray-500">Offer services and earn</p>
             </div>
           </button>
         </div>
 
         <button
-          disabled={!role}
           onClick={handleContinue}
-          className="w-full mt-8 bg-primary text-white py-3 rounded-lg font-medium disabled:opacity-50"
+          disabled={!role}
+          className="w-full mt-8 bg-primary cursor-pointer hover:bg-primary/90 text-white py-3 font-medium rounded-md"
         >
           Continue
         </button>
       </div>
     </Container>
-  );
+  )
 }

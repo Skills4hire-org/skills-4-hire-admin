@@ -1,6 +1,6 @@
 interface Props {
-  value: string;
-  setValue: (v: string) => void;
+  value: string
+  setValue: (v: string) => void
 }
 
 export default function SortDropdown({ value, setValue }: Props) {
@@ -25,6 +25,7 @@ export default function SortDropdown({ value, setValue }: Props) {
           focus:ring-2 focus:ring-primary
           focus:border-primary
           transition
+          cursor-pointer
         "
       >
         <option value="">Sort</option>
@@ -39,5 +40,5 @@ export default function SortDropdown({ value, setValue }: Props) {
         <span>▼</span>
       </div>
     </div>
-  );
+  )
 }

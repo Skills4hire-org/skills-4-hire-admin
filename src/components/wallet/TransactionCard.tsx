@@ -1,7 +1,8 @@
 import { currencyFormatter } from '@/utils/format'
-import ApprovePaymentButton from '../buttons/ApprovePaymentButton'
 import { useSelector } from 'react-redux'
 import type { UserType } from '@/utils/types'
+import { Button } from '../ui/button'
+import { useNavigate } from 'react-router-dom'
 
 interface TransactionCardProp {
   status: string
@@ -33,6 +34,12 @@ export default function TransactionCard({
   }
   const textByStatus =
     userType === 'customer' ? customerTextByStatus : serviceProviderTextByStatus
+  const navigate = useNavigate()
+  const handleApprove = () => {
+    navigate('/customer/wallet/approve', {
+      state: { name, amount },
+    })
+  }
   return (
     <div className="bg-white shadow-sm rounded-md p-2 flex items-center justify-between gap-6 max-w-5xl mx-auto w-full">
       <div className="capitalize space-y-0.5">
@@ -48,7 +55,9 @@ export default function TransactionCard({
         </span>
 
         {status === 'pending' && userType == 'customer' && (
-          <ApprovePaymentButton />
+          <Button onClick={handleApprove} size="sm">
+            Approve
+          </Button>
         )}
       </div>
     </div>

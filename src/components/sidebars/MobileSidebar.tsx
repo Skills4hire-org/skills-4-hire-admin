@@ -16,14 +16,18 @@ import { user } from '@/utils/database'
 import { Link, NavLink } from 'react-router-dom'
 import { sidebarAboutUs, sidebarMobileGeneral } from '@/assets/data'
 import SignOutButton from '../buttons/SignOutButton'
-import SwitchRoleButton from '../buttons/SwitchRoleButton'
+import { useSelector } from 'react-redux'
 
 export default function MobileSidebar() {
+  const { avatar }: { avatar: string } = useSelector(
+    (state: any) => state.userState,
+  )
+  const is_active = navigator.onLine
   return (
     <Sidebar>
       <SidebarHeader className="border-b py-1.5 gap-0.5">
         <div className="flex items-start justify-between ">
-          <ProfileImage size="size-10" />
+          <ProfileImage size="size-10" is_active={is_active} avatar={avatar} />
           <SidebarTrigger
             size="icon"
             variant="outline"
@@ -67,9 +71,6 @@ export default function MobileSidebar() {
                   </SidebarMenuItem>
                 )
               })}
-              <div className="mt-1">
-                <SwitchRoleButton className="bg-primary text-white" />
-              </div>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -83,18 +84,33 @@ export default function MobileSidebar() {
                 const IconComponent = icon
                 return (
                   <SidebarMenuItem key={label}>
-                    <NavLink
-                      to={url}
-                      className="py-1 px-0 flex items-center gap-2"
-                    >
-                      <IconComponent
-                        strokeWidth={1.5}
-                        className="w-5 h-5 p-0.5 "
-                      />
-                      <span className="capitalize text-xs flex items-center justify-between flex-1 ">
-                        {label}
-                      </span>
-                    </NavLink>
+                    {label == 'helpline number' ? (
+                      <a
+                        href={url}
+                        className="py-1 px-0 flex items-center gap-2"
+                      >
+                        <IconComponent
+                          strokeWidth={1.5}
+                          className="w-5 h-5 p-0.5 "
+                        />
+                        <span className="capitalize text-xs flex items-center justify-between flex-1 ">
+                          {label}
+                        </span>
+                      </a>
+                    ) : (
+                      <NavLink
+                        to={url}
+                        className="py-1 px-0 flex items-center gap-2"
+                      >
+                        <IconComponent
+                          strokeWidth={1.5}
+                          className="w-5 h-5 p-0.5 "
+                        />
+                        <span className="capitalize text-xs flex items-center justify-between flex-1 ">
+                          {label}
+                        </span>
+                      </NavLink>
+                    )}
                   </SidebarMenuItem>
                 )
               })}

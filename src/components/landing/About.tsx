@@ -1,4 +1,4 @@
-import about from '../../assets/images/about.png'
+import about from '../../assets/images/about.jpg'
 
 export default function About() {
   return (
@@ -25,7 +25,7 @@ export default function About() {
         <img
           src={about}
           alt={about}
-          className="w-full h-full object-cover object-center aspect-4/5"
+          className="w-full h-full object-cover object-top aspect-4/5"
         />
       </figure>
     </section>

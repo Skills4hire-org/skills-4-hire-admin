@@ -139,9 +139,6 @@
 .swiper-pagination-bullet-active {
   opacity: 1;
   background: var(--primary);
-  width: 16px;
-  height: 8px;
-  border-radius: 8px;
 }
 .carousel-wrapper {
   width: 100px;

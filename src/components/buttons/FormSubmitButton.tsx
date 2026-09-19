@@ -21,7 +21,11 @@ function FormSubmitButton({
   return (
     <div>
       {submitting ? (
-        <Button size={size} disabled className={className}>
+        <Button
+          size={size ?? 'default'}
+          disabled
+          className={`min-w-30  ${className}`}
+        >
           {texting} <Loader2Icon className="animate-spin " />
         </Button>
       ) : (

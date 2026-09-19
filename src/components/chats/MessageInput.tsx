@@ -1,7 +1,6 @@
-import { addMessage } from '@/features/chat/chatSlice'
+import { useCreateMessage } from '@/hooks/useChats'
 import { SendHorizontal } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 
 interface MessageInputProps {
   conversationId: string
@@ -10,11 +9,7 @@ interface MessageInputProps {
 export default function MessageInput({ conversationId }: MessageInputProps) {
   const [text, setText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
-
-  const dispatch = useDispatch()
-  const currentUserId = useSelector(
-    (state: any) => state.chatState.currentUserId,
-  )
+  const { mutate: sendMessage } = useCreateMessage()
 
   const MIN_HEIGHT = 40
   const MAX_HEIGHT = 120
@@ -33,23 +28,22 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
   }, [text])
 
   const handleSend = () => {
-    if (!text.trim()) return
-
-    dispatch(
-      addMessage({
-        id: Date.now(),
-        conversationId,
-        senderId: currentUserId,
-        text,
-        createdAt: Date.now(),
-      }),
+    sendMessage(
+      {
+        conversation_id: conversationId,
+        data: {
+          content: text,
+        },
+      },
+      {
+        onSuccess: () => {
+          setText('')
+          if (textareaRef.current) {
+            textareaRef.current.style.height = `${MIN_HEIGHT}px`
+          }
+        },
+      },
     )
-
-    setText('')
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = `${MIN_HEIGHT}px`
-    }
   }
 
   return (

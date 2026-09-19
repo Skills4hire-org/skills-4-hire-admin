@@ -2,20 +2,30 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 
 interface FormInputFieldProp {
-  name: string
-  label?: string
-  labelSize?: string
-  value: string | undefined
-  handleInputChange: (key: string, value: any) => void
-  placeholder?: string
-  type: string
-  min?: string
-  required?: boolean
-  disabled?: boolean
-  className?: string
-  handleBlur?: () => void
-  maxLength?: number
-  handleKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
+  name: string;
+  label?: string;
+  labelSize?: string;
+  value: string | undefined;
+  handleInputChange: (key: string, value: any) => void;
+  placeholder?: string;
+  type: string;
+  min?: string;
+  required?: boolean;
+  disabled?: boolean;
+  className?: string;
+  handleBlur?: () => void;
+  maxLength?: number;
+  inputMode?:
+    | "search"
+    | "text"
+    | "none"
+    | "tel"
+    | "url"
+    | "email"
+    | "numeric"
+    | "decimal";
+    pattern?: string;
+  handleKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export default function FormInput({
@@ -31,6 +41,8 @@ export default function FormInput({
   className,
   handleBlur,
   maxLength,
+  inputMode,
+  pattern,
   handleKeyDown,
   labelSize,
 }: FormInputFieldProp) {
@@ -55,6 +67,8 @@ export default function FormInput({
         onBlur={handleBlur}
         autoComplete="true"
         maxLength={maxLength}
+        inputMode={inputMode}
+        pattern={pattern}
         onKeyDown={(e) => handleKeyDown && handleKeyDown(e)}
       />
     </div>

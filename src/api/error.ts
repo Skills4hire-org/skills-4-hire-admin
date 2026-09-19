@@ -1,9 +1,8 @@
 import axios from 'axios'
 
 interface ApiErrorResponse {
+  success: string
   message: string
-  success: boolean
-  timestamp: string
 }
 
 export const handleApiError = (error: unknown): never => {

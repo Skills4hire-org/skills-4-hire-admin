@@ -2,20 +2,33 @@ import { useState, type FormEvent } from 'react'
 import ProfileImage from '../global/ProfileImage'
 import FormTextArea from '../form-fields/FormTextArea'
 import FormSubmitButton from '../buttons/FormSubmitButton'
+import { usePostReplies } from '@/hooks/usePosts'
+import { useValidateSchema } from '@/hooks/useValidateSchema'
+import { commentFormSchema } from '@/utils/schemas'
 
 export default function CommentReplyForm({
   setShowReplyForm,
+  post_id,
+  comment_id,
 }: {
   setShowReplyForm: (value: boolean) => void
+  post_id: string | undefined
+  comment_id: string | undefined
 }) {
   const [formData, setFormData] = useState({
-    reply: '',
+    message: '',
   })
+  const { mutate: postReplies, isPending } = usePostReplies()
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const validatedData = useValidateSchema(commentFormSchema, formData)
+    if (!validatedData) {
+      return
+    }
+    postReplies({ post_id, data: validatedData, comment_id })
   }
 
   return (
@@ -29,7 +42,7 @@ export default function CommentReplyForm({
       <div className="flex-1">
         <FormTextArea
           name="reply"
-          value={formData?.reply}
+          value={formData?.message}
           placeholder="Write a thoughtful reply..."
           rows={3}
           required
@@ -48,7 +61,7 @@ export default function CommentReplyForm({
             text="Post a reply"
             texting="replying"
             className="h-8"
-            disabled={!formData.reply}
+            disabled={!formData.message || isPending}
             size="sm"
           />
         </div>

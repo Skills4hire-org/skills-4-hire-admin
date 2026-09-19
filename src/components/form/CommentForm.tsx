@@ -2,16 +2,29 @@ import { useState, type FormEvent } from 'react'
 import FormTextArea from '../form-fields/FormTextArea'
 import ProfileImage from '../global/ProfileImage'
 import FormSubmitButton from '../buttons/FormSubmitButton'
+import { useValidateSchema } from '@/hooks/useValidateSchema'
+import { commentFormSchema } from '@/utils/schemas'
+import { usePostComment } from '@/hooks/usePosts'
 
-export default function CommentForm() {
+export default function CommentForm({
+  post_id,
+}: {
+  post_id: string | undefined
+}) {
   const [formData, setFormData] = useState({
-    comment: '',
+    message: '',
   })
+  const { mutate: postComment, isPending } = usePostComment()
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    const validatedData = useValidateSchema(commentFormSchema, formData)
+    if (!validatedData) {
+      return
+    }
+    postComment({ post_id, data: validatedData })
   }
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 mb-5 md:mb-6">
@@ -22,7 +35,7 @@ export default function CommentForm() {
       <div className="relative flex-1">
         <FormTextArea
           name="comment"
-          value={formData?.comment}
+          value={formData?.message}
           placeholder="Add a comment"
           rows={3}
           required
@@ -34,7 +47,7 @@ export default function CommentForm() {
           text="comment"
           texting="submitting"
           className="absolute right-3 bottom-2 h-7 md:h-8 rounded-sm capitalize"
-          disabled={!formData.comment}
+          disabled={!formData.message || isPending}
         />
       </div>
     </form>

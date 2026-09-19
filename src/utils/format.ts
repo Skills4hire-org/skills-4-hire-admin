@@ -1,5 +1,9 @@
-import { format, isToday, isYesterday } from 'date-fns'
-import { availableServices } from './database'
+import {
+  format,
+  formatDistanceToNowStrict,
+  isToday,
+  isYesterday,
+} from 'date-fns'
 import type {
   AvailableServices,
   Notification,
@@ -63,13 +67,20 @@ export function formatRelativeTime(dateString: string) {
   return format(date, 'MMM d, yyyy, hh:mm a')
 }
 
-export const groupedServicesByCategory = availableServices.reduce(
-  (acc, current) => {
-    ;(acc[current.category] ??= []).push(current)
-    return acc
-  },
-  {} as Record<string, AvailableServices[]>,
-)
+export const groupedServicesByCategory = ({
+  services,
+}: {
+  services: AvailableServices[] | undefined
+}) => {
+  const formatAvailableServices = services?.reduce(
+    (acc, current) => {
+      ;(acc[current.category] ??= []).push(current)
+      return acc
+    },
+    {} as Record<string, AvailableServices[]>,
+  )
+  return formatAvailableServices
+}
 
 const amount = currencyFormatter(10000)
 export const getNotificationDetails: Record<
@@ -158,4 +169,48 @@ export function isSameUrl(linkPath: string, pathname: string, hash: string) {
   // Normalize "/" vs ""
   const current = `${pathname}${hash || ''}` || '/'
   return current === linkPath
+}
+
+export function formatCommentTime(dateString: string) {
+  const date = new Date(dateString)
+
+  // Today
+  if (isToday(date)) {
+    return formatDistanceToNowStrict(date, {
+      addSuffix: true,
+    })
+  }
+
+  // Yesterday
+  if (isYesterday(date)) {
+    return 'Yesterday'
+  }
+
+  const now = new Date()
+
+  const diffInDays = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+
+  // Within 7 days
+  if (diffInDays < 7) {
+    return formatDistanceToNowStrict(date, {
+      addSuffix: true,
+    })
+  }
+}
+
+export const getVideoMimeType = (url: string) => {
+  const cleanUrl = url.split('?')[0].split('#')[0]
+
+  const extension = cleanUrl.split('.').pop()?.toLowerCase()
+
+  const mimeTypes: Record<string, string> = {
+    mp4: 'video/mp4',
+    webm: 'video/webm',
+    ogg: 'video/ogg',
+    ogv: 'video/ogg',
+    mov: 'video/quicktime',
+    m4v: 'video/x-m4v',
+  }
+
+  return mimeTypes[extension ?? ''] ?? 'video/mp4'
 }

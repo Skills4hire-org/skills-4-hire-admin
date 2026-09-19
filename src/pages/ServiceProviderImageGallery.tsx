@@ -1,41 +1,91 @@
 import Container from '@/components/global/Container'
+import Error from '@/components/global/Error'
+import Loading from '@/components/global/Loading'
 import HeaderWithBackNavigation from '@/components/header/HeaderWithBackNavigation'
 import ServiceProviderGallery from '@/components/service-provider/ServiceProviderGallery'
-import { serviceAround } from '@/utils/database'
-import { useState } from 'react'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
+import { useUserGallery } from '@/hooks/useUsers'
+import type { Gallery } from '@/types/user.types'
 import { useParams } from 'react-router-dom'
 
 export default function ServiceProviderImageGallery() {
   const { id } = useParams()
-  const serviceProvider = serviceAround?.find(
-    (provider) => provider.id === Number(id)
-  )
-  const [visibleCount, setVisibleCount] = useState(10)
-  const handleVisibleImages = () => {
-    setVisibleCount(visibleCount + 10)
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useUserGallery({ id })
+
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  })
+
+  const gallery: Gallery[] = data?.pages.flatMap((page) => page.results) ?? []
+
+  const handleGalleryFetchingError = async () => {
+    refetch()
   }
   return (
     <div className="space-y-2 md:space-y-6">
-      <HeaderWithBackNavigation title={`${serviceProvider?.name}'s Gallery`} />
+      <HeaderWithBackNavigation title={`Gallery`} />
       <Container>
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4">
-            {serviceProvider?.gallery
-              ?.slice(0, visibleCount)
-              ?.map((image, index) => (
-                <ServiceProviderGallery key={index} image={image} />
-              ))}
+        {isLoading ? (
+          <div className="h-24">
+            <Loading />
           </div>
-          {(serviceProvider?.services &&
-            serviceProvider?.services?.length <= visibleCount) || (
-            <button
-              className="text-xs md:text-sm mx-auto my-4 font-medium hover:text-primary cursor-pointer block"
-              onClick={handleVisibleImages}
-            >
-              Show more images
-            </button>
-          )}
-        </>
+        ) : (
+          <>
+            {isError && !data ? (
+              <div className="py-10">
+                <Error
+                  text="Failed to load gallery"
+                  buttonFunc={handleGalleryFetchingError}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4">
+                  {gallery?.map((gallery) => (
+                    <ServiceProviderGallery
+                      key={gallery.description}
+                      image={gallery.image_url}
+                    />
+                  ))}
+                </div>
+
+                <div ref={loadMoreRef} />
+
+                {isFetchingNextPage && (
+                  <div className="py-4 text-center">
+                    <Loading />
+                  </div>
+                )}
+                {hasNextPage && (
+                  <button
+                    className="shadow-sm px-4 py-1 text-sm md:text-base font-medium rounded-sm cursor-pointer hover:shadow-md"
+                    onClick={() => fetchNextPage()}
+                  >
+                    Load more media
+                  </button>
+                )}
+                {isFetchNextPageError && (
+                  <Error
+                    text="Failed to load more media"
+                    buttonFunc={fetchNextPage}
+                    buttonText="Retry"
+                  />
+                )}
+              </>
+            )}
+          </>
+        )}
       </Container>
     </div>
   )

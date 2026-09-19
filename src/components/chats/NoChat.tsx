@@ -10,7 +10,7 @@ export default function NoChat() {
         <p className="text-sm md:text-base text-gray-500">No messages yet</p>
         <button className="flex items-center gap-1 text-xs md:text-sm px-3 py-1.5 rounded-full bg-primary text-white hover:bg-primary/90 cursor-pointer">
           <Search className="w-4 h-4 md:w-5 md:h-5" />
-          <span>Search for a service provider</span>
+          <span>Search for a skilled professional</span>
         </button>
       </div>
     </div>

@@ -1,15 +1,54 @@
 import Container from '@/components/global/Container'
+import Error from '@/components/global/Error'
+import Loading from '@/components/global/Loading'
 import HeaderWithBackNavigation from '@/components/header/HeaderWithBackNavigation'
 import ServiceProviderCard from '@/components/service-provider/ServiceProviderCard'
 import { Input } from '@/components/ui/input'
-import { serviceAround } from '@/utils/database'
+import { useFavourites } from '@/hooks/useFavourites'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
+import { useAllProviders } from '@/hooks/useUsers'
+import type { Favorite } from '@/types/favourites.type'
 import { Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function ServicesAroundYou() {
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useAllProviders({})
+  const {
+    data: favoritesData,
+    isLoading: favoritesLoading,
+    isError: favouritesError,
+  } = useFavourites()
+  const favourites: Favorite = favoritesData
+  const providersID = favourites?.providers?.map(
+    ({ provider_id }) => provider_id,
+  )
+  const professionals = data?.pages.flatMap((page) => page.results) ?? []
+
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  })
+  const handleProviderFetchingError = async () => {
+    if (!data) {
+      refetch()
+    } else {
+      fetchNextPage()
+    }
+  }
+
   return (
     <div className="space-y-2 md:space-y-6">
-      <HeaderWithBackNavigation title="Services around you" />
+      <HeaderWithBackNavigation title="Professionals for you" />
       <Container>
         <div className="space-y-4 md:space-y-6">
           <div>
@@ -31,11 +70,57 @@ export default function ServicesAroundYou() {
               </div>
             </Link>
           </div>
-          <div className="grid grid-cols-1 gap-4">
-            {serviceAround.map((service) => (
-              <ServiceProviderCard key={service.id} {...service} />
-            ))}
-          </div>
+          {isLoading || favoritesLoading ? (
+            <div className="h-24">
+              <Loading />
+            </div>
+          ) : (
+            <>
+              {isError || favouritesError ? (
+                <div className="py-10">
+                  <Error
+                    text="Failed to load professionals"
+                    buttonFunc={handleProviderFetchingError}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 gap-4">
+                    {professionals?.map((professional) => (
+                      <ServiceProviderCard
+                        key={professional.provider_id}
+                        {...professional}
+                        providerIDs={providersID}
+                        favouriteID={favourites?.favourite_id}
+                      />
+                    ))}
+                  </div>
+                  <div ref={loadMoreRef} />
+
+                  {isFetchingNextPage && (
+                    <div className="py-4 text-center">
+                      <Loading />
+                    </div>
+                  )}
+                  {hasNextPage && (
+                    <button
+                      className="shadow-sm px-4 py-1 text-sm md:text-base font-medium rounded-sm cursor-pointer hover:shadow-md"
+                      onClick={() => fetchNextPage()}
+                    >
+                      Load more
+                    </button>
+                  )}
+                  {isFetchNextPageError && (
+                    <Error
+                      text="Failed to load more professionals"
+                      buttonFunc={fetchNextPage}
+                      buttonText="Retry"
+                    />
+                  )}
+                </>
+              )}
+            </>
+          )}
         </div>
       </Container>
     </div>

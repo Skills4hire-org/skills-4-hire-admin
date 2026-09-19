@@ -37,7 +37,7 @@ export default function SearchBar({
       />
       <button
         type="submit"
-        className="absolute top-1/2  -translate-y-1/2 h-full right-0 w-8 bg-primary text-white rounded-r-md flex items-center justify-center"
+        className="absolute top-1/2  -translate-y-1/2 h-full right-0 w-8 bg-primary text-white rounded-r-md flex items-center justify-center cursor-pointer"
       >
         <Search className="w-4.5 h-4.5" />
       </button>

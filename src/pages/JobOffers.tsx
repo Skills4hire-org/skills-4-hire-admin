@@ -1,97 +1,88 @@
-import JobOfferCard from "@/components/home/JobOfferCard";
-import { jobOffers } from "@/assets/data";
-import { Sliders } from "lucide-react";
-import { useMemo, useState } from "react";
-import FilterModal from "@/components/home/FilterModal";
-import SortDropdown from "@/components/home/SortDropdown";
-import NoJobsFound from "@/components/home/NoJobsFound";
-import {
-  parseBudget,
-  extractLocation,
-  detectServiceType,
-} from "@/utils/jobHelpers";
-import { carouselServices } from "@/assets/data";
+import JobOfferCard from '@/components/home/JobOfferCard'
+import { Briefcase, Sliders } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import FilterModal from '@/components/home/FilterModal'
+import SortDropdown from '@/components/home/SortDropdown'
+import NoJobsFound from '@/components/global/NoResultFound'
+import { carouselServices } from '@/assets/data'
+import { useOffers } from '@/hooks/usePosts'
+import Loading from '@/components/global/Loading'
+import Error from '@/components/global/Error'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
+import type { Post } from '@/types/post.types'
 
 export default function JobOffers() {
-  const [filterOpen, setFilterOpen] = useState(false);
-
+  const [filterOpen, setFilterOpen] = useState(false)
   const [filters, setFilters] = useState({
-    serviceType: "",
-    minAmount: "",
-    maxAmount: "",
-    state: "",
-    city: "",
-  });
+    serviceType: '',
+    minAmount: '',
+    maxAmount: '',
+    state: '',
+    city: '',
+  })
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useOffers({
+    tags_name: filters.serviceType,
+    city: filters.city,
+    state: filters.state,
+    min_amount: filters.minAmount,
+    max_amount: filters.maxAmount,
+  })
 
-  const [sortType, setSortType] = useState("");
+  const offers: Post[] = data?.pages.flatMap((page) => page.results) ?? []
 
-  const hasActiveFilters = Object.values(filters).some(Boolean);
-
-  const services = carouselServices.map((service) => service.text);
-
-  const processedJobs = useMemo(() => {
-    return jobOffers.map((job) => {
-      const { city, state } = extractLocation(job.location);
-
-      return {
-        ...job,
-        budgetNumber: parseBudget(job.budget),
-        city,
-        state,
-        serviceType: detectServiceType(job.title),
-        createdAt: job.id,
-      };
-    });
-  }, []);
-
-  const filteredJobs = useMemo(() => {
-    return processedJobs.filter((job) => {
-      if (filters.serviceType && job.serviceType !== filters.serviceType)
-        return false;
-
-      if (filters.state && job.state !== filters.state) return false;
-      if (filters.city && job.city !== filters.city) return false;
-
-      if (filters.minAmount && job.budgetNumber < Number(filters.minAmount))
-        return false;
-
-      if (filters.maxAmount && job.budgetNumber > Number(filters.maxAmount))
-        return false;
-
-      return true;
-    });
-  }, [processedJobs, filters]);
-
-  const sortedJobs = useMemo(() => {
-    const jobs = [...filteredJobs];
-
-    switch (sortType) {
-      case "newest":
-        return jobs.sort(
-          (newerJob, olderJob) => olderJob.createdAt - newerJob.createdAt,
-        );
-
-      case "oldest":
-        return jobs.sort(
-          (earlierJob, laterJob) => earlierJob.createdAt - laterJob.createdAt,
-        );
-
-      case "highest":
-        return jobs.sort(
-          (higherBudgetJob, lowerBudgetJob) =>
-            lowerBudgetJob.budgetNumber - higherBudgetJob.budgetNumber,
-        );
-
-      case "lowest":
-        return jobs.sort(
-          (lowerBudgetJob, higherBudgetJob) =>
-            lowerBudgetJob.budgetNumber - higherBudgetJob.budgetNumber,
-        );
-
-      default:
-        return jobs;
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  })
+  const handleOffersFetchingError = async () => {
+    if (!data) {
+      refetch()
+    } else {
+      fetchNextPage()
     }
-  }, [filteredJobs, sortType]);
+  }
+
+  const [sortType, setSortType] = useState('')
+
+  const hasActiveFilters = Object.values(filters).some(Boolean)
+
+  const services = carouselServices.map((service) => service.text)
+
+  const sortedOffers = useMemo(() => {
+    const sortOffers =
+      offers &&
+      offers.flat().sort((a, b) => {
+        const aAmount = Number(a.amount)
+        const bAmount = Number(b.amount)
+        const aDate = new Date(a.updated_at).getTime()
+        const bDate = new Date(b.updated_at).getTime()
+
+        switch (sortType) {
+          case 'newest':
+            return bDate - aDate
+          case 'oldest':
+            return aDate - bDate
+          case 'highest':
+            return bAmount - aAmount
+          case 'lowest':
+            return aAmount - bAmount
+          default:
+            return 0
+        }
+      })
+
+    return sortOffers
+  }, [offers, sortType])
 
   return (
     <div className="lg:px-4">
@@ -125,30 +116,76 @@ export default function JobOffers() {
                 text-xs md:text-sm
                 shadow-sm
                 hover:bg-gray-50
-                hover:border-gray-300
-                transition
+                hover:border-gray-200
+                transition cursor-pointer
               "
+              disabled={isLoading}
             >
               <Sliders className="w-4 h-4" />
               Filter
               {hasActiveFilters && (
                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full" />
               )}
-            </button> 
+            </button>
             <SortDropdown value={sortType} setValue={setSortType} />
           </div>
         </div>
+        {isLoading ? (
+          <div className="h-24">
+            <Loading />
+          </div>
+        ) : (
+          <>
+            {!isError && !data ? (
+              <div className="py-10">
+                <Error
+                  text="Failed to load job offers"
+                  buttonFunc={handleOffersFetchingError}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-4">
+                  {sortedOffers?.length === 0 ? (
+                    <NoJobsFound
+                      icon={Briefcase}
+                      text="No job offers found"
+                      subtitle=" Try adjusting your filters or reset search"
+                    />
+                  ) : (
+                    sortedOffers?.map((offer) => (
+                      <JobOfferCard key={offer.post_id} {...offer} />
+                    ))
+                  )}
+                </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          {sortedJobs.length === 0 ? (
-            <NoJobsFound />
-          ) : (
-            sortedJobs.map((offer) => (
-              <JobOfferCard key={offer.id} {...offer} />
-            ))
-          )}
-        </div>
+                <div ref={loadMoreRef} />
+
+                {isFetchingNextPage && (
+                  <div className="py-4 text-center">
+                    <Loading />
+                  </div>
+                )}
+                {hasNextPage && (
+                  <button
+                    className="shadow-sm px-4 py-1 text-sm md:text-base font-medium rounded-sm cursor-pointer hover:shadow-md"
+                    onClick={() => fetchNextPage()}
+                  >
+                    Load more
+                  </button>
+                )}
+                {isFetchNextPageError && (
+                  <Error
+                    text="Failed to load more job offers"
+                    buttonFunc={fetchNextPage}
+                    buttonText="Retry"
+                  />
+                )}
+              </>
+            )}
+          </>
+        )}
       </div>
     </div>
-  );
+  )
 }

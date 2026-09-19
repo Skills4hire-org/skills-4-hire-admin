@@ -2,8 +2,10 @@ import { TabsList, TabsTrigger } from '../ui/tabs'
 
 export default function TabHead({
   tabList,
+  setStatus,
 }: {
   tabList: { status: string; label: string }[]
+  setStatus?: (value: string) => void
 }) {
   return (
     <TabsList className="w-full h-full  rounded-none relative p-0">
@@ -12,7 +14,8 @@ export default function TabHead({
           <TabsTrigger
             key={index}
             value={status}
-            className="bg-background cursor-pointer capitalize "
+            className="bg-background cursor-pointer capitalize"
+            onClick={() => setStatus && setStatus(status)}
           >
             {label}
           </TabsTrigger>

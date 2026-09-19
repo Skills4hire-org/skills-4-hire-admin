@@ -4,21 +4,18 @@ import BookingAddress from '@/components/service-provider-booking/BookingAddress
 import BookingDateTime from '@/components/service-provider-booking/BookingDateTime'
 import BookingPayment from '@/components/service-provider-booking/BookingPayment'
 import ServiceProviderBookingProgressIndicator from '@/components/service-provider-booking/ServiceProviderBookingProgressIndicator'
-import { getServiceProvider } from '@/utils/loaders'
-import type { ServiceProvider } from '@/utils/types'
+import type { Profile } from '@/types/user.types'
 import { useSelector } from 'react-redux'
-import { useParams } from 'react-router-dom'
 
 export default function ServiceProviderBooking() {
-  const { id } = useParams()
-  const serviceProvider = getServiceProvider(id)
+  const serviceProvider = undefined
   const { step }: { step: number } = useSelector(
-    (state: any) => state.bookingState
+    (state: any) => state.bookingState,
   )
 
   const bookingComponents: Record<
     number,
-    React.ComponentType<{ serviceProvider: ServiceProvider | undefined }>
+    React.ComponentType<{ serviceProvider: Profile | undefined }>
   > = {
     1: BookingDateTime,
     2: BookingAddress,

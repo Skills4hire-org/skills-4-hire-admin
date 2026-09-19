@@ -2,14 +2,12 @@ import { configureStore } from '@reduxjs/toolkit'
 import bookingReducer from './features/booking/bookingSlice'
 import registrationReducer from './features/registration/registrationSlice'
 import userReducer from './features/user/userSlice'
-import chatReducer from './features/chat/chatSlice'
 
 export const store = configureStore({
   reducer: {
     bookingState: bookingReducer,
     registrationState: registrationReducer,
     userState: userReducer,
-    chatState: chatReducer,
   },
 })
 

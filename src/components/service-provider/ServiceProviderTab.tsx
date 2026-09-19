@@ -1,17 +1,21 @@
 import { serviceProviderTabList } from '@/assets/data'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { cn } from '@/lib/utils'
-import type { ServiceProvider } from '@/utils/types'
 import ServiceProviderAbout from './ServiceProviderAbout'
 import ServiceProviderGallery from './ServiceProviderGallery'
 import EmptyTab from './EmptyTab'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
+import type { Gallery } from '@/types/user.types'
 
 export default function ServiceProviderTab({
-  getServiceProvider,
+  about,
+  gallery,
+  user_id,
 }: {
-  getServiceProvider: ServiceProvider | undefined
+  about: string | undefined
+  gallery: Gallery[] | undefined
+  user_id: string | undefined
 }) {
   return (
     <Tabs defaultValue="about" className="space-y-1 ">
@@ -22,7 +26,7 @@ export default function ServiceProviderTab({
               key={index}
               value={status}
               className={cn(
-                'bg-background cursor-pointer capitalize border-b-1 border-b-transparent text-base md:text-lg text-muted-foreground data-[state=active]:border-b-foreground data-[state=active]:border-b-1 px-0 data-[state=active]:text-foreground'
+                'bg-background cursor-pointer capitalize border-b-1 border-b-transparent text-base md:text-lg text-muted-foreground data-[state=active]:border-b-foreground data-[state=active]:border-b-1 px-0 data-[state=active]:text-foreground',
               )}
             >
               {status}
@@ -36,21 +40,21 @@ export default function ServiceProviderTab({
             {status === 'gallery' && (
               <div className="pb-10 md:pb-12">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4">
-                  {getServiceProvider?.gallery
-                    ?.slice(0, 4)
-                    ?.map((image, index) => (
-                      <ServiceProviderGallery key={index} image={image} />
-                    ))}
+                  {gallery?.map((gallery) => (
+                    <ServiceProviderGallery
+                      key={gallery.image_url}
+                      image={gallery.image_url}
+                    />
+                  ))}
                 </div>
 
-                {getServiceProvider?.gallery?.length == 0 ||
-                !getServiceProvider?.gallery ? (
+                {gallery?.length == 0 || !gallery ? (
                   <div className="pt-10 md:pt-12 mb-1">
                     <EmptyTab label="image uploaded" />
                   </div>
                 ) : (
                   <Link
-                    to={`/customer/service-provider/${getServiceProvider?.id}/gallery`}
+                    to={`/customer/professionals/${user_id}/gallery`}
                     className="border-t py-2  text-base md:text-lg mt-2 font-medium absolute left-1/2 -translate-x-1/2 bottom-0 w-full  flex items-center justify-center gap-2 hover:bg-gray-300"
                   >
                     Show all images
@@ -61,8 +65,8 @@ export default function ServiceProviderTab({
             )}
             {status === 'about' && (
               <>
-                <ServiceProviderAbout about={getServiceProvider?.about} />
-                {getServiceProvider?.about?.length == 0 && (
+                <ServiceProviderAbout about={about} />
+                {!about && (
                   <div className="py-10 md:py-12 ">
                     <EmptyTab label="about" />
                   </div>

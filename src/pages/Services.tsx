@@ -1,6 +1,5 @@
 import MobileServicesOverviewHeader from '@/components/header/MobileServicesOverviewHeader'
 import SectionHeading from '@/components/services/SectionHeading'
-import { availableServices, serviceAround } from '@/utils/database'
 import { Link } from 'react-router-dom'
 import Container from '@/components/global/Container'
 import ServiceProviderCard from '@/components/service-provider/ServiceProviderCard'
@@ -9,8 +8,45 @@ import ReferAndEarnBanner from '@/components/services/ReferAndEarnBanner'
 import DesktopServicesOverviewHeader from '@/components/header/DesktopServicesOverviewHeader'
 import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
+import Loading from '@/components/global/Loading'
+import Error from '@/components/global/Error'
+import { useAllServices } from '@/hooks/useServices'
+import type { Service } from '@/types/services.types'
+import { useAllProviders } from '@/hooks/useUsers'
+import type { Provider } from '@/types/user.types'
+import { useFavourites } from '@/hooks/useFavourites'
+import type { Favorite } from '@/types/favourites.type'
 
 export default function Services() {
+  const { data, isLoading, isError, refetch } = useAllServices({})
+  const {
+    data: providers,
+    isLoading: providersLoading,
+    isError: providersError,
+    refetch: refetchProviders,
+  } = useAllProviders({})
+  const {
+    data: favoritesData,
+    isLoading: favoritesLoading,
+    isError: favouritesError,
+  } = useFavourites()
+  const favourites: Favorite = favoritesData
+  const providersID = favourites?.providers?.map(
+    ({ provider_id }) => provider_id,
+  )
+
+  const services: Service[] = data?.pages.flatMap((page) => page.results) ?? []
+  const professionals: Provider[] =
+    providers?.pages.flatMap((page) => page.results) ?? []
+
+  const handleProviderFetchingError = () => {
+    refetchProviders()
+  }
+
+  const handleServicesFetchingError = () => {
+    refetch()
+  }
+
   return (
     <div className="space-y-2 md:space-y-6">
       <Container className="bg-white">
@@ -39,7 +75,7 @@ export default function Services() {
               </div>
             </Link>
           </div>
-          <section className="space-y-3 pb-1.5">
+          <section className="space-y-3 pb-1.5 min-h-32">
             <div className="flex items-center justify-between gap-6">
               <SectionHeading heading="Available services" />
               <Link
@@ -49,28 +85,69 @@ export default function Services() {
                 View all
               </Link>
             </div>
-            <div className="grid grid-cols-3 xl:grid-cols-6 gap-2 md:gap-4">
-              {availableServices.slice(0, 6).map((service, index) => (
-                <ServicesCard key={index} {...service} />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="h-24">
+                <Loading />
+              </div>
+            ) : (
+              <>
+                {isError ? (
+                  <div className="h-24">
+                    <Error
+                      text="Failed to load available services"
+                      buttonFunc={handleServicesFetchingError}
+                      buttonText="Retry"
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 xl:grid-cols-6 gap-2 md:gap-4">
+                    {services?.slice(0, 6)?.map((service) => (
+                      <ServicesCard key={service.service_id} {...service} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </section>
           <ReferAndEarnBanner />
           <section className="space-y-3">
             <div className="flex items-center justify-between gap-6">
-              <SectionHeading heading="Services around you" />
+              <SectionHeading heading="Professionals for you" />
               <Link
-                to="services-around-you"
+                to="professionals"
                 className="text-xs text-primary underline"
               >
                 View all
               </Link>
             </div>
-            <div className="grid grid-cols-1 gap-4">
-              {serviceAround.slice(0, 4).map((service) => (
-                <ServiceProviderCard key={service.id} {...service} />
-              ))}
-            </div>
+            {providersLoading || favoritesLoading ? (
+              <div className="h-24">
+                <Loading />
+              </div>
+            ) : (
+              <>
+                {providersError || favouritesError ? (
+                  <div className="py-10">
+                    <Error
+                      text="Failed to load professionals"
+                      buttonFunc={handleProviderFetchingError}
+                      buttonText="Retry"
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {professionals?.slice(0, 4).map((professional) => (
+                      <ServiceProviderCard
+                        key={professional.provider_id}
+                        {...professional}
+                        providerIDs={providersID}
+                        favouriteID={favourites?.favourite_id}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
           </section>
         </div>
       </Container>

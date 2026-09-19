@@ -1,5 +1,5 @@
 import SectionTitle from '../global/SectionTitle'
-import Carousel from './Carousel'
+import ServicesCarousel from './ServicesCarousel'
 
 export default function Services() {
   return (
@@ -9,7 +9,7 @@ export default function Services() {
         title2="services"
         desc="Skills4Hire brings together a variety of services, from trusted home repairs to modern digital solutions. Whatever your need, our providers are ready to deliver."
       />
-      <Carousel />
+      <ServicesCarousel />
     </section>
   )
 }

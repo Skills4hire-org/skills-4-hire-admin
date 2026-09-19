@@ -5,7 +5,6 @@ import {
   HelpCircle,
   Info,
   Mail,
-  MessageCircle,
   MessageCircleQuestion,
   Phone,
   PhoneCall,
@@ -16,7 +15,6 @@ import {
 import { CreditCard, User } from 'lucide-react'
 import { MessageSquare, BookOpen } from 'lucide-react'
 import {
-  FaWhatsapp,
   FaFacebookF,
   FaXTwitter,
   FaLinkedinIn,
@@ -24,9 +22,7 @@ import {
 } from 'react-icons/fa6'
 import img1 from './Rectangle 20.png'
 import img2 from './Rectangle 21.png'
-import { TbArticle, TbAward, TbHeart, TbStar, TbUser } from 'react-icons/tb'
-import Rect18 from './Rectangle 18.png'
-import Rect19 from './Rectangle 19.png'
+import { TbHeart, TbStar, TbUser } from 'react-icons/tb'
 import Rect20 from './Rectangle 20.png'
 import Rect21 from './Rectangle 21.png'
 import JoshuaFridayBG from './JoshuaFriday-bg.png'
@@ -46,15 +42,20 @@ import plumbing from './images/plumbing.jpg'
 import projectManagement from './images/projectManagement.jpg'
 import videoEditing from './images/videoEditing.jpg'
 import webDevelopment from './images/webDevelopment.jpg'
+import heroCarousel1 from './images/hero-carousel-1.jpg'
+import heroCarousel2 from './images/hero-carousel2.jpg'
+import heroCarousel3 from './images/hero-carousel3.png'
 
 export const images = [img1, img2, img1]
+
+/* ============== NAVLINKS =============   */
 export const sidebarMobileGeneral = [
   {
     icon: TbHeart,
     label: 'favorites',
     url: '/customer/favorites',
   },
-  {
+  /* {
     icon: TbArticle,
     label: 'blog',
     url: '/',
@@ -63,7 +64,7 @@ export const sidebarMobileGeneral = [
     icon: TbAward,
     label: 'my rewards',
     url: '/customer/rewards',
-  },
+  }, */
   {
     icon: TbStar,
     label: 'my reviews',
@@ -81,7 +82,7 @@ export const sidebarDesktopGeneral = [
     label: 'favorites',
     url: '/customer/favorites',
   },
-  {
+  /* {
     icon: TbArticle,
     label: 'blog',
     url: '/',
@@ -90,7 +91,7 @@ export const sidebarDesktopGeneral = [
     icon: TbAward,
     label: 'my rewards',
     url: '/customer/rewards',
-  },
+  }, */
   {
     icon: TbStar,
     label: 'my reviews',
@@ -122,7 +123,7 @@ export const sidebarAboutUs = [
   {
     icon: PhoneCall,
     label: 'helpline number',
-    url: '/',
+    url: 'tel:+2347073743287',
   },
 ]
 
@@ -197,32 +198,32 @@ export const serviceProviderMobileNavLinks = [
   {
     label: 'Home',
     icon: 'si:home-line',
-    url: '/service-provider/home',
+    url: '/service_provider/home',
     activeIcon: 'si:home-fill',
   },
   {
     key: 'overview',
     label: 'Overview',
     icon: 'fluent:briefcase-medical-16-regular',
-    url: '/service-provider/overview',
+    url: '/service_provider/overview',
     activeIcon: 'fluent:briefcase-medical-16-filled',
   },
   {
     label: 'bookings',
     icon: 'fluent:clipboard-settings-24-regular',
-    url: '/service-provider/bookings',
+    url: '/service_provider/bookings',
     activeIcon: 'fluent:clipboard-settings-24-filled',
   },
   {
     label: 'wallet',
     icon: 'solar:wallet-outline',
-    url: '/service-provider/wallet',
+    url: '/service_provider/wallet',
     activeIcon: 'solar:wallet-bold',
   },
   {
     label: 'chats',
     icon: 'material-symbols:chat-outline-rounded',
-    url: '/service-provider/chats',
+    url: '/service_provider/chats',
     activeIcon: 'material-symbols:chat-rounded',
   },
 ]
@@ -231,53 +232,55 @@ export const serviceProviderDesktopNavLinks = [
   {
     label: 'Home',
     icon: 'si:home-line',
-    url: '/service-provider/home',
+    url: '/service_provider/home',
   },
   {
     key: 'overview',
     label: 'Overview',
     icon: 'fluent:briefcase-medical-20-regular',
-    url: '/service-provider/overview',
+    url: '/service_provider/overview',
   },
   {
     label: 'bookings',
     icon: 'fluent:clipboard-settings-24-regular',
-    url: '/service-provider/bookings',
+    url: '/service_provider/bookings',
   },
   {
     label: 'wallet',
     icon: 'solar:wallet-outline',
-    url: '/service-provider/wallet',
+    url: '/service_provider/wallet',
   },
   {
     label: 'chats',
     icon: 'material-symbols:chat-outline-rounded',
-    url: '/service-provider/chats',
+    url: '/service_provider/chats',
   },
   {
     label: 'notification',
     icon: 'lucide:bell',
-    url: '/service-provider/notification',
+    url: '/service_provider/notification',
   },
   {
     label: 'help center',
     icon: 'lucide:circle-help',
-    url: '/service-provider/support',
+    url: '/service_provider/support',
   },
 ]
 
+/* ========= TABS LIST ============ */
+
 export const bookingsTabsList = [
   {
-    status: 'ongoing',
+    status: 'In_progress',
     label: 'Ongoing',
   },
   {
-    status: 'completed',
+    status: 'Completed',
     label: 'Completed',
   },
   {
-    status: 'canceled',
-    label: 'Canceled',
+    status: 'Cancelled',
+    label: 'Cancelled',
   },
 ]
 export const customerWalletTabsList = [
@@ -308,6 +311,10 @@ export const serviceProviderWalletTabsList = [
     label: 'Canceled',
   },
 ]
+
+/* ======== CAROUSEL INFO ========== */
+
+export const heroCarousel = [heroCarousel1, heroCarousel2, heroCarousel3]
 
 export const walletActions = [
   { label: 'Send', icon: Send, path: 'send' },
@@ -477,11 +484,6 @@ export const timeFrameOptions = [
 
 export const supportOptions = [
   {
-    icon: MessageCircle,
-    text: 'Chat with customer support',
-    url: '/customer/customer-support',
-  },
-  {
     icon: Mail,
     text: 'Send an email',
     url: 'mailto:skills4hireofficial@gmail.com',
@@ -539,30 +541,6 @@ export const socialLinks = [
   },
 ]
 
-export const socialShareOptions = [
-  {
-    id: 'whatsapp',
-    Icon: FaWhatsapp,
-    url: 'https://wa.me/?text=Join%20Skills4Hire:%20https://skills4hire.com/ref?code=',
-  },
-  {
-    id: 'facebook',
-    Icon: FaFacebookF,
-    url: 'https://www.facebook.com/profile.php?id=61581913121945',
-  },
-  { id: 'instagram', Icon: FaInstagram, url: '#' },
-  {
-    id: 'x',
-    Icon: FaXTwitter,
-    url: 'https://twitter.com/intent/tweet?text=Join%20Skills4Hire%20via%20my%20link:%20https://skills4hire.com/ref?code=',
-  },
-  {
-    id: 'linkedin',
-    Icon: FaLinkedinIn,
-    url: 'https://www.linkedin.com/company/skills4hire',
-  },
-]
-
 export const mockContacts = [
   { id: 1, name: 'Diana M.', source: 'Contacts', status: 'Invite' },
   { id: 2, name: 'Diana M.', source: 'Instagram', status: 'Accepted' },
@@ -572,10 +550,10 @@ export const mockContacts = [
 
 export const serviceProviderTabList = ['about', 'gallery']
 
-export const serviceProviderActivityTabList: ['posts', 'comments', 'images'] = [
+export const serviceProviderActivityTabList: ['posts', 'comments', 'media'] = [
   'posts',
   'comments',
-  'images',
+  'media',
 ]
 
 export const bookingProgress = [
@@ -603,36 +581,6 @@ export const genderOptions = [
   {
     label: 'Female',
     value: 'female',
-  },
-]
-
-export const mockServices = [
-  {
-    id: '1',
-    provider: 'Joshua Friday',
-    rating: 4,
-    location: 'Ikeja, Lagos',
-    priceFrom: 800,
-    excerpt: 'Included Pipe repairs, Leak fixes, and Maintenance etc.',
-    image: Rect18,
-  },
-  {
-    id: '2',
-    provider: 'Joshua Friday',
-    rating: 5,
-    location: 'Yaba, Lagos',
-    priceFrom: 1200,
-    excerpt: 'Routine checks, plumbing maintenance, and quick fixes.',
-    image: Rect19,
-  },
-  {
-    id: '3',
-    provider: 'Joshua Friday',
-    rating: 4,
-    location: 'Surulere, Lagos',
-    priceFrom: 1500,
-    excerpt: 'Professional drain unclogging, repairs, and replacements.',
-    image: Rect20,
   },
 ]
 

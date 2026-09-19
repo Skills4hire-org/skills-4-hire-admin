@@ -1,4 +1,5 @@
-import type { BookingInfo, ServiceProviderServiceCard } from '@/utils/types'
+import type { BookingInfo } from '@/types/bookings.type'
+import type { ServiceProviderServiceCard } from '@/types/user.types'
 import { createSlice } from '@reduxjs/toolkit'
 
 interface Booking {
@@ -36,7 +37,7 @@ const bookingSlice = createSlice({
     removeService: (state, action) => {
       const { id } = action.payload
       state.services = state.services.filter(
-        (service: ServiceProviderServiceCard) => service.id !== id,
+        (service: ServiceProviderServiceCard) => service.service_id !== id,
       )
     },
     resetService: (state) => {

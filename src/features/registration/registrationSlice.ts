@@ -1,26 +1,17 @@
-import { user } from "@/utils/database";
-import type { Registration } from "@/utils/types";
-import { createSlice } from "@reduxjs/toolkit";
+import type { Registration } from '@/types/onboard.types'
+import { createSlice } from '@reduxjs/toolkit'
 
 const defaultState: Registration = {
-  role: undefined,
-
   personalInfo: {
-    firstName: user?.firstName,
-    lastName: user?.lastName,
-    email: user?.email,
-    phone: user?.phone,
-    gender: user?.gender,
-    profileImage: user?.profileImage,
-    nin: "",
+    nin: '',
     driversLicense: {
       file: null,
-      name: "",
+      name: '',
       selectNewFile: true,
     },
     passport: {
       file: null,
-      name: "",
+      name: '',
       selectNewFile: true,
     },
   },
@@ -30,69 +21,64 @@ const defaultState: Registration = {
     certification: undefined,
     certificateFile: {
       file: null,
-      name: "",
+      name: '',
       selectNewFile: true,
     },
     experienceYears: undefined,
-    previousWorkPlaces: "",
+    previousWorkPlaces: '',
     workImage: {
       file: null,
-      name: "",
+      name: '',
       selectNewFile: true,
     },
   },
 
   applicationProfile: {
-    country: "",
-    city: "",
-    address: "",
-    dateOfBirth: "",
-    headline: "",
+    country: '',
+    state: '',
+    city: '',
+    address: '',
+    dateOfBirth: '',
+    headline: '',
   },
-};
+}
 
 const registrationSlice = createSlice({
-  name: "registration",
+  name: 'registration',
   initialState: defaultState,
 
   reducers: {
-    setRole: (state, action) => {
-      state.role = action.payload;
-    },
-
     addPersonalInfo: (state, action) => {
-      const { personalInfo } = action.payload;
-      state.personalInfo = { ...state.personalInfo, ...personalInfo };
+      const { personalInfo } = action.payload
+      state.personalInfo = { ...state.personalInfo, ...personalInfo }
     },
 
     addExperience: (state, action) => {
-      const { experience } = action.payload;
-      state.experience = { ...state.experience, ...experience };
+      const { experience } = action.payload
+      state.experience = { ...state.experience, ...experience }
     },
 
     addApplicationProfile: (state, action) => {
-      const { applicationProfile } = action.payload;
+      const { applicationProfile } = action.payload
       state.applicationProfile = {
         ...state.applicationProfile,
         ...applicationProfile,
-      };
+      }
     },
 
     clearForms: (state) => {
-      state.applicationProfile = defaultState.applicationProfile;
-      state.experience = defaultState.experience;
-      state.personalInfo = defaultState.personalInfo;
-      state.role = undefined;
+      state.applicationProfile = defaultState.applicationProfile
+      state.experience = defaultState.experience
+      state.personalInfo = defaultState.personalInfo
     },
   },
-});
+})
 
 export const {
-  setRole,
   addPersonalInfo,
   addExperience,
   addApplicationProfile,
   clearForms,
-} = registrationSlice.actions;
+} = registrationSlice.actions
 
-export default registrationSlice.reducer;
+export default registrationSlice.reducer

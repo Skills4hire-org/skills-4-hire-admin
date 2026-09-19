@@ -1,4 +1,4 @@
-import type { BookingInfo, ServiceProvider } from '@/utils/types'
+import type { BookingInfo } from '@/utils/types'
 import { useDispatch, useSelector } from 'react-redux'
 import FormInput from '../form-fields/FormInput'
 import { handleBookingInfo, handleSteps } from '@/features/booking/bookingSlice'
@@ -7,14 +7,15 @@ import { Button } from '../ui/button'
 import FormTextArea from '../form-fields/FormTextArea'
 import PaymentDrawer from '../service-provider-booking/PaymentDrawer'
 import type { FormEvent } from 'react'
+import type { Profile } from '@/types/user.types'
 
 export default function PaymentForm({
   serviceProvider,
 }: {
-  serviceProvider: ServiceProvider | undefined
+  serviceProvider: Profile | undefined
 }) {
   const { info }: { info: BookingInfo } = useSelector(
-    (state: any) => state.bookingState
+    (state: any) => state.bookingState,
   )
 
   const serviceProviderInfo = {
@@ -39,7 +40,7 @@ export default function PaymentForm({
           info: {
             [field]: newValue,
           },
-        })
+        }),
       )
     } else {
       dispatch(
@@ -47,7 +48,7 @@ export default function PaymentForm({
           info: {
             [field]: value,
           },
-        })
+        }),
       )
     }
   }
@@ -61,10 +62,10 @@ export default function PaymentForm({
     dispatch(
       handleBookingInfo({
         info: {
-          serviceProviderName: serviceProvider?.name,
-          serviceProviderOccupation: serviceProvider?.occupation,
+          serviceProviderName: serviceProvider?.user?.profile?.display_name,
+          serviceProviderOccupation: serviceProvider?.professional_title,
         },
-      })
+      }),
     )
   }
   return (

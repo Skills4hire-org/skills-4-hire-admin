@@ -1,4 +1,4 @@
-import { serviceProviderProfileRegistrationSteps } from '@/assets/data'
+/* import { serviceProviderProfileRegistrationSteps } from '@/assets/data'
 import Container from '@/components/global/Container'
 import HeaderWithBackNavigation from '@/components/header/HeaderWithBackNavigation'
 import RegistrationProgress from '@/components/registration/RegistrationProgress'
@@ -81,3 +81,4 @@ export default function Registration() {
     </div>
   )
 }
+ */

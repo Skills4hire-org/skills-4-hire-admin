@@ -11,13 +11,13 @@ import Experience from './pages/Experience'
 import FAQs from './pages/Faq'
 import Favorites from './pages/Favorites'
 import ForgotPassword from './pages/ForgotPassword'
+import ResetPasswordConfirm from './pages/ResetPasswordConfirm'
 import JobOffers from './pages/JobOffers'
 import Landing from './pages/Landing'
 import PersonalInfo from './pages/PersonalInfo'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import ProviderOverview from './pages/ProviderOverview'
 import Referral from './pages/Referral'
-import Registration from './pages/Registration'
 import Rewards from './pages/Rewards'
 import ServiceProviderBooking from './pages/ServiceProviderBooking'
 import ServiceProviderProfile from './pages/ServiceProviderProfile'
@@ -40,6 +40,11 @@ import Reviews from './pages/Reviews'
 import ServiceProviderServices from './pages/ServiceProviderServices'
 import ServiceProviderActivity from './pages/ServiceProviderActivity'
 import ServiceProviderImageGallery from './pages/ServiceProviderImageGallery'
+import Endorsers from './pages/Endorsers'
+import Endorsed from './pages/Endorsed'
+import ProfileActivity from './pages/ProfileActivity'
+import ProfileServices from './pages/ProfileServices'
+import ProfileGallery from './pages/ProfileGallery'
 import IndexLayout from './components/layouts/IndexLayout'
 import Blog from './pages/Blog'
 import BlogPost from './pages/BlogPost'
@@ -52,15 +57,12 @@ import TransactionHistory from './pages/TransactionHistory'
 import Chat from './pages/Chat'
 import ChatWindow from './components/chats/ChatWindow'
 import ConversationList from './components/chats/ConversationList'
-import { useEffect } from 'react'
-import { initializeMockChat } from './features/chat/mockData'
 import Search from './pages/Search'
 import WithdrawVerification from './pages/WithdrawVerification'
 import WithdrawSuccess from './pages/WithdrawSuccess'
 import WithdrawPin from './pages/WithdrawPin'
 import OnboardingRole from './pages/OnboardingRole'
 import UploadPhoto from './pages/UploadPhoto'
-import OnboardingGuard from './pages/OnboardingGuard'
 
 import AdminLayout from './components/layouts/AdminLayout'
 import UserManagement from './pages/admin/UserManagement'
@@ -85,7 +87,7 @@ const AdminRoute = () => {
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: <IndexLayout />,
     children: [
       {
@@ -93,53 +95,65 @@ const router = createBrowserRouter([
         element: <Landing />,
       },
       {
-        path: "blog",
+        path: 'blog',
         element: <Blog />,
       },
       {
-        path: "blog/:id",
+        path: 'blog/:id',
         element: <BlogPost />,
       },
       {
-        path: "legal",
+        path: 'legal',
         element: <Legal />,
       },
       {
-        path: "about",
+        path: 'about',
         element: <About2 />,
       },
     ],
   },
   {
-    path: "sign-up",
+    path: 'sign-up',
     element: <SignUp />,
   },
   {
-    path: "sign-in",
+    path: 'sign-in',
     element: <SignIn />,
   },
   {
-    path: "forgot-password",
+    path: 'forgot-password',
     element: <ForgotPassword />,
   },
   {
-    path: "verification",
+    path: 'password/reset-confirm',
+    element: <ResetPasswordConfirm />,
+  },
+  {
+    path: 'verification',
     element: <Verification />,
   },
   {
-    path: "onboarding",
+    path: 'onboarding',
     element: <OnboardingRole />,
   },
   {
-    path: "onboarding/upload-photo",
-    element: (
-      <OnboardingGuard>
-        <UploadPhoto />
-      </OnboardingGuard>
-    ),
+    path: 'onboarding/:role/upload',
+    element: <UploadPhoto />,
   },
   {
-    path: ":userType",
+    path: 'onboarding/professional/personal-information',
+    element: <PersonalInfo />,
+  },
+  {
+    path: 'onboarding/professional/experience',
+    element: <Experience />,
+  },
+  {
+    path: 'onboarding/professional/application-profile',
+    element: <ApplicationProfile />,
+  },
+  {
+    path: ':userType',
     element: <Layout />,
     children: [
       {
@@ -147,7 +161,7 @@ const router = createBrowserRouter([
         element: <Navigate to="home" />,
       },
       {
-        path: "home",
+        path: 'home',
         element: <HomeLayout />,
         children: [ 
           {
@@ -155,95 +169,99 @@ const router = createBrowserRouter([
             element: <Navigate to="posts" />,
           },
           {
-            path: "posts",
+            path: 'posts',
             element: <Posts />,
           },
           {
-            path: "my-offers",
+            path: 'my-offers',
             element: <CustomerOffers />,
           },
           {
-            path: "job-offers",
+            path: 'job-offers',
             element: <JobOffers />,
           },
         ],
       },
       {
-        path: "create-offer",
+        path: 'create-offer',
         element: <CreateOffer />,
       },
       {
-        path: "create-post",
+        path: 'create-post',
         element: <CreatePost />,
       },
       {
-        path: "edit-offer/:id",
+        path: 'edit-offer/:id',
         element: <UpdateOffer />,
       },
       {
-        path: "overview",
+        path: 'overview',
         element: <ProviderOverview />,
       },
-      { path: "overview/request", element: <Request /> },
+      { path: 'overview/request', element: <Request /> },
       {
-        path: "services",
+        path: 'services',
         element: <Services />,
       },
       {
-        path: "services/available-services",
+        path: 'services/available-services',
         element: <AvailableServices />,
       },
       {
-        path: "services/available-services/:service",
+        path: 'services/available-services/:service',
         element: <SingleService />,
       },
       {
-        path: "services/services-around-you",
+        path: 'services/professionals',
         element: <ServicesAroundYou />,
       },
       {
-        path: "services/search",
+        path: 'services/search',
         element: <ServicesSearch />,
       },
       {
-        path: "service-provider/:id",
+        path: 'professionals/:id',
         element: <ServiceProviderProfile />,
       },
       {
-        path: "service-provider/:id/services",
+        path: 'professionals/:id/:profession/services',
         element: <ServiceProviderServices />,
       },
       {
-        path: "service-provider/:id/activity",
+        path: 'professionals/:id/activity',
         element: <ServiceProviderActivity />,
       },
       {
-        path: "service-provider/:id/gallery",
+        path: 'professionals/:id/gallery',
         element: <ServiceProviderImageGallery />,
       },
       {
-        path: "service-provider/:id/booking",
+        path: 'professionals/:id/booking',
         element: <ServiceProviderBooking />,
       },
       {
-        path: "bookings",
+        path: 'professionals/:id/endorsers',
+        element: <Endorsers />,
+      },
+      {
+        path: 'bookings',
         element: <Bookings />,
       },
       {
-        path: "wallet",
+        path: 'wallet',
         element: <Wallet />,
       },
       {
-        path: "wallet/transaction-history",
+        path: 'wallet/transaction-history',
         element: <TransactionHistory />,
       },
-      { path: "wallet/approve", element: <ApprovePayment /> },
-      { path: "wallet/withdraw", element: <Withdraw /> },
-      { path: "wallet/withdraw-verify", element: <WithdrawVerification /> },
-      { path: "wallet/withdraw-pin", element: <WithdrawPin /> },
-      { path: "wallet/withdraw-success", element: <WithdrawSuccess /> },
+      { path: 'wallet/approve', element: <ApprovePayment /> },
+      { path: 'wallet/withdraw', element: <Withdraw /> },
+      { path: 'wallet/withdraw-verify', element: <WithdrawVerification /> },
+      { path: 'wallet/withdraw-pin', element: <WithdrawPin /> },
+      { path: 'wallet/withdraw-success', element: <WithdrawSuccess /> },
       {
-        path: "chats",
+        path: 'chats',
         element: <Chat />,
         children: [
           {
@@ -251,62 +269,105 @@ const router = createBrowserRouter([
             element: <ConversationList />,
           },
           {
-            path: ":conversationId",
+            path: ':conversationId',
             element: <ChatWindow />,
           },
         ],
       },
       {
-        path: "search",
+        path: 'search',
         element: <Search />,
       },
       {
-        path: "favorites",
+        path: 'favorites',
         element: <Favorites />,
       },
       {
-        path: "rewards",
+        path: 'rewards',
         element: <Rewards />,
       },
       {
-        path: "support",
+        path: 'support',
         element: <Support />,
       },
       {
-        path: "notification",
+        path: 'notification',
         element: <Notification />,
       },
       {
-        path: "referral",
+        path: 'referral',
         element: <Referral />,
       },
       {
-        path: "profile",
+        path: 'profile',
         element: <Profile />,
       },
       {
-        path: "registration",
-        element: <Registration />,
+        path: 'profile/activity',
+        element: <ProfileActivity />,
       },
       {
-        path: "registration/personal-information",
-        element: <PersonalInfo />,
+        path: 'profile/:profession/services',
+        element: <ProfileServices />,
       },
       {
-        path: "registration/experience",
-        element: <Experience />,
+        path: 'profile/gallery',
+        element: <ProfileGallery />,
       },
       {
-        path: "registration/application-profile",
-        element: <ApplicationProfile />,
+        path: 'profile/endorsed',
+        element: <Endorsed />,
       },
+
       {
-        path: "reviews",
+        path: 'reviews',
         element: <Reviews />,
       },
       {
-        path: "about",
+        path: 'about',
         element: <About />,
+      },
+    ],
+  },
+  {
+    path: "/admin",
+    element: <AdminRoute />,
+    children: [
+      {
+        index: true,
+        element: <Overview />,
+      },
+      {
+        path: "user-management",
+        element: <UserManagement />,
+      },
+      {
+        path: "services",
+        element: <AdminServices />,
+      },
+      {
+        path: "jobs",
+        element: <Jobs />,
+      },
+      {
+        path: "support",
+        element: <SupportDisputes />,
+      },
+      {
+        path: "transactions",
+        element: <Transactions />,
+      },
+      {
+        path: "financial",
+        element: <Finance />,
+      },
+      {
+        path: "content-moderation",
+        element: <ContentModeration />,
+      },
+      {
+        path: "analytics",
+        element: <Analytics />,
       },
     ],
   },
@@ -364,11 +425,8 @@ const router = createBrowserRouter([
     path: "faq",
     element: <FAQs />,
   },
-]);
+])
 
 export default function App() {
-  useEffect(() => {
-    initializeMockChat()
-  }, [])
   return <RouterProvider router={router} />
 }

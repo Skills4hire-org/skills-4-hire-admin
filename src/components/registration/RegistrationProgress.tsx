@@ -1,8 +1,7 @@
-import { useSelector } from 'react-redux'
-import CircularProgress from './CircularProgress'
-import type { Registration, RequiredFormData } from '@/utils/types'
+/* import { useSelector } from 'react-redux'
+import CircularProgress from './CircularProgress' */
 
-export default function RegistrationProgress() {
+/* export default function RegistrationProgress() {
   const { personalInfo, experience, applicationProfile }: Registration =
     useSelector((state: any) => state.registrationState)
   const requiredFormData: RequiredFormData = {
@@ -54,4 +53,4 @@ export default function RegistrationProgress() {
       </p>
     </div>
   )
-}
+} */

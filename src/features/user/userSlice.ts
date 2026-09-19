@@ -1,12 +1,14 @@
-import type { AppUser } from '@/utils/types'
+import type { AuthUser } from '@/types/user.types'
 import { createSlice } from '@reduxjs/toolkit'
 
-const defaultState: AppUser = {
-  userType: 'customer',
-  isServiceProvider: false,
+const defaultState: AuthUser = {
+  userType: 'professional',
+  access: null,
+  refresh: null,
+  user_data: null,
 }
 
-const getUserFromLocalStorage: () => AppUser = () => {
+const getUserFromLocalStorage: () => AuthUser = () => {
   const user = sessionStorage.getItem('user')
   return user ? JSON.parse(user) : defaultState
 }
@@ -15,19 +17,26 @@ const userSlice = createSlice({
   name: 'user',
   initialState: getUserFromLocalStorage(),
   reducers: {
-    setUserType: (state, action) => {
-      const { userType } = action.payload
-      state.userType = userType
+    setUserCredentials: (state, action) => {
+      const { access, refresh, user_data } = action.payload
+      state.access = access
+      state.refresh = refresh
+      state.user_data = user_data
+      state.userType = user_data.is_customer ? 'customer' : 'professional'
       sessionStorage.setItem('user', JSON.stringify(state))
     },
-    setServiceProviderStatus: (state, action) => {
-      const { serviceProviderStatus } = action.payload
-      state.isServiceProvider = serviceProviderStatus
+    setAccessToken: (state, action) => {
+      const accessToken = action.payload
+      state.access = accessToken
       sessionStorage.setItem('user', JSON.stringify(state))
+    },
+    logoutUser: () => {
+      sessionStorage.setItem('user', JSON.stringify(defaultState))
     },
   },
 })
 
-export const { setUserType, setServiceProviderStatus } = userSlice.actions
+export const { setUserCredentials, setAccessToken, logoutUser } =
+  userSlice.actions
 
 export default userSlice.reducer

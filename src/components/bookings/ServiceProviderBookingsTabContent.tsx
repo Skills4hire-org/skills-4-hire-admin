@@ -1,28 +1,27 @@
 import { bookingsTabsList } from '@/assets/data'
-import { serviceProviderBookings } from '@/utils/database'
 import { TabsContent } from '../ui/tabs'
 import NoBookingCard from './NoBookingCard'
 import ServiceProviderBookingCard from './ServiceProviderBookingCard'
+import type { Booking } from '@/types/bookings.type'
 
-export default function ServiceProviderBookingsTabContent() {
-  const groupBookingsByStatus = (status: string) => {
-    return serviceProviderBookings?.filter(
-      (booking) => booking?.status?.toLowerCase() === status.toLowerCase()
-    )
-  }
-
+export default function ServiceProviderBookingsTabContent({
+  bookings,
+}: {
+  bookings: Booking[] | undefined
+}) {
   return (
     <>
       {bookingsTabsList.map(({ status, label }) => (
         <TabsContent key={status} value={status}>
           <div className="space-y-6 md:space-y-8 md:py-2">
-            {groupBookingsByStatus(status)?.map((booking, index) => (
-              <ServiceProviderBookingCard key={index} {...booking} />
+            {bookings?.map((booking) => (
+              <ServiceProviderBookingCard
+                key={booking.booking_id}
+                {...booking}
+              />
             ))}
 
-            {groupBookingsByStatus(status)?.length == 0 && (
-              <NoBookingCard label={label} />
-            )}
+            {bookings?.length == 0 && <NoBookingCard label={label} />}
           </div>
         </TabsContent>
       ))}

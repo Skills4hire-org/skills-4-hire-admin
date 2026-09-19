@@ -1,97 +1,126 @@
-import { type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import FormInput from '../form-fields/FormInput'
 import { Button } from '../ui/button'
-import type { Registration, RequiredFormData } from '@/utils/types'
-import { useDispatch, useSelector } from 'react-redux'
 import {
   addApplicationProfile,
   clearForms,
 } from '@/features/registration/registrationSlice'
+
 import { useValidateSchema } from '@/hooks/useValidateSchema'
 import { applicationProfileFormSchema } from '@/utils/schemas'
-import {
-  setServiceProviderStatus,
-  setUserType,
-} from '@/features/user/userSlice'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+
+import { uploadToCloudinary } from '@/utils/cloudinary'
+import { completeOnboard, selectRole } from '@/api/onboard'
+import type { Registration } from '@/types/onboard.types'
 
 export default function ApplicationProfileForm() {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+
   const { personalInfo, experience, applicationProfile }: Registration =
     useSelector((state: any) => state.registrationState)
-  const { country, city, address, dateOfBirth, headline } = applicationProfile
-  const requiredFormData: RequiredFormData = {
-    firstName: personalInfo.firstName,
-    lastName: personalInfo.lastName,
-    phone: personalInfo.phone,
-    nin: personalInfo.nin,
-    service: experience.service,
-    ...applicationProfile,
-  }
-  const requiredFields: (keyof RequiredFormData)[] = [
-    'firstName',
-    'lastName',
-    'phone',
-    'nin',
-    'service',
-    'country',
-    'city',
-    'address',
-    'dateOfBirth',
-    'headline',
-  ]
 
-  const calculateCompletionPercentage = () => {
-    const filledFields = requiredFields.filter((key) => {
-      const value = requiredFormData[key]
+  const { country, city, address, dateOfBirth, headline, state } = applicationProfile
 
-      if (key == 'nin') {
-        return value?.length === 10
-      }
-      if (key == 'headline') {
-        return value && value.length >= 25
-      }
-      return value !== undefined && value !== ''
-    })
-    const percentage = 20 + (filledFields.length / requiredFields.length) * 80
-    return percentage
-  }
-  const percentageCompletion = calculateCompletionPercentage()
+  const [submitting, setSubmitting] = useState(false)
 
-  const dispatch = useDispatch()
   const handleInputChange = (field: string, value: string) => {
     dispatch(
       addApplicationProfile({
-        applicationProfile: {
-          [field]: value,
-        },
-      })
+        applicationProfile: { [field]: value },
+      }),
     )
   }
-  const navigate = useNavigate()
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const validateData = useValidateSchema(
+
+    const valid = useValidateSchema(
       applicationProfileFormSchema,
-      applicationProfile
+      applicationProfile,
     )
-    if (!validateData) {
-      return
+
+    if (!valid) return
+
+    setSubmitting(true)
+
+
+    try {
+      const driversLicense = await uploadToCloudinary(
+        personalInfo.driversLicense?.file,
+      )
+
+      const passport = await uploadToCloudinary(personalInfo.passport?.file)
+
+      const cert = await uploadToCloudinary(experience.certificateFile?.file)
+
+      const workImg = await uploadToCloudinary(experience.workImage?.file)
+      const profilePayload = {
+        professional_title: experience.service,
+        headline,
+        profile: {
+          country,
+          city,
+          location: address,
+        },
+
+        years_of_experience: experience.experienceYears ? Number(experience.experienceYears) : 0,
+
+        nin: personalInfo.nin,
+
+        date_of_birth: dateOfBirth,
+
+        place_of_work: experience.previousWorkPlaces,
+
+        is_certified: experience.certification === 'yes',
+
+        certifications: cert
+          ? [
+              {
+                file_url: cert[0]?.url,
+                public_id: cert[0]?.public_id,
+                description: 'Certification document',
+              },
+            ]
+          : [],
+
+        work_images: workImg
+          ? [
+              {
+                image_url: workImg[0]?.url,
+                public_id: workImg[0]?.public_id,
+                description: 'Work sample',
+              },
+            ]
+          : null,
+
+        drivers_license: driversLicense
+          ? {
+              file_url: driversLicense[0]?.url,
+              public_id: driversLicense[0]?.public_id,
+            }
+          : null,
+
+        passport_photo: passport
+          ? {
+              file_url: passport[0]?.url,
+              public_id: passport[0]?.public_id,
+            }
+          : null,
+      }
+      await completeOnboard(profilePayload)
+      await selectRole('SERVICE_PROVIDER')
+      toast.success('Registration successful!')
+      dispatch(clearForms())
+      navigate('/professional/home')
+    } catch (error: any) {
+      toast.error(error?.message || 'Registration failed. Please try again.')
+    } finally {
+      setSubmitting(false)
     }
-    //handle creation of account on database
-    toast.success('Registration successful!')
-    dispatch(
-      setServiceProviderStatus({
-        serviceProviderStatus: true,
-      })
-    )
-    dispatch(
-      setUserType({
-        userType: 'service-provider',
-      })
-    )
-    dispatch(clearForms())
-    navigate('/service-provider/profile')
   }
 
   return (
@@ -102,28 +131,32 @@ export default function ApplicationProfileForm() {
         value={country}
         handleInputChange={handleInputChange}
         type="text"
-        className="bg-transparent pb-1 px-3 border-b-foreground border-x-0 focus-visible:ring-0 border-t-0 h-6 pt-0 rounded-none shadow-none"
-        placeholder=""
         required
       />
+      <FormInput
+        name="state"
+        label="State"
+        value={state}
+        handleInputChange={handleInputChange}
+        type="text"
+        required
+      />
+
       <FormInput
         name="city"
         label="City"
         value={city}
         handleInputChange={handleInputChange}
         type="text"
-        className="bg-transparent pb-1 px-3 border-b-foreground border-x-0 focus-visible:ring-0 border-t-0 h-6 pt-0 rounded-none shadow-none"
-        placeholder=""
         required
       />
+
       <FormInput
         name="address"
         label="Address"
         value={address}
         handleInputChange={handleInputChange}
         type="text"
-        className="bg-transparent pb-1 px-3 border-b-foreground border-x-0 focus-visible:ring-0 border-t-0 h-6 pt-0 rounded-none shadow-none"
-        placeholder=""
         required
       />
 
@@ -133,10 +166,9 @@ export default function ApplicationProfileForm() {
         value={dateOfBirth}
         handleInputChange={handleInputChange}
         type="date"
-        className="bg-transparent pb-1 pl-3 pr-0 border-b-foreground border-x-0 focus-visible:ring-0 border-t-0 h-6 pt-0 rounded-none shadow-none"
-        placeholder=""
         required
       />
+
       <FormInput
         name="headline"
         label="Headline"
@@ -144,18 +176,12 @@ export default function ApplicationProfileForm() {
         handleInputChange={handleInputChange}
         type="text"
         maxLength={90}
-        className={`bg-transparent pb-1 px-3 border-b-foreground border-x-0 focus-visible:ring-0 border-t-0 h-6 pt-0 rounded-none shadow-none ${
-          headline.length > 0 && headline.length < 25
-            ? 'focus-visible:border-destructive border-b-destructive '
-            : 'focus-visible:border-primary '
-        }`}
-        placeholder=""
         required
       />
 
-      <div className=" max-w-xs mx-auto mt-6">
-        <Button className="py-4 w-full" disabled={percentageCompletion !== 100}>
-          Register
+      <div className="max-w-xs mx-auto mt-6">
+        <Button className="w-full py-4" disabled={submitting}>
+          {submitting ? 'Registering...' : 'Register'}
         </Button>
       </div>
     </form>

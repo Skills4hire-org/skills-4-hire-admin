@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import hero from '../../assets/images/landing-hero.jpg'
+import HeroCarousel from './HeroCarousel'
 
 export default function Hero() {
   return (
@@ -12,12 +12,12 @@ export default function Hero() {
           Your trusted market place for every skills/service - from local
           services to digital expertise.
         </p>
-        <p className="text-2xl md:text-3xl font-medium shrink-0">
-          Hire <span className="text-primary">smarter</span>. Work safer
+        <p className="text-xl sm:text-2xl lg:text-3xl font-medium shrink-0">
+          Find the <span className="text-primary">right skills</span>. Connect
         </p>
       </div>
       <div className="flex flex-col gap-1 md:gap-5 md:flex-row items-center justify-center max-w-md md:-mr-42">
-        <p className="text-2xl md:text-3xl font-medium shrink-0">
+        <p className="text-xl sm:text-2xl lg:text-3xl font-medium shrink-0">
           Get it <span className="text-primary">done</span>.
         </p>
         <p className="text-xs  text-center md:text-start">
@@ -30,7 +30,7 @@ export default function Hero() {
           to="/sign-up"
           className="w-32 text-sm py-2 rounded-md bg-primary text-white hover:bg-primary/90 hover:shadow-sm cursor-pointer text-center"
         >
-          Create Account
+          Get Started
         </Link>
         <Link
           to="/sign-in"
@@ -39,14 +39,7 @@ export default function Hero() {
           Sign In
         </Link>
       </div>
-      <div
-        className="mt-3 md:mt-0 bg-gray-400 h-50 md:h-90 lg:h-[450px] xl:h-[530px]  2xl:h-[560px] w-full rounded-t-lg [clip-path:polygon(0%_0%,50%_10%,100%_0%,100%_100%,0_100%)] md:[clip-path:polygon(0%_0%,50%_16%,100%_0%,100%_100%,0_100%)] lg:[clip-path:polygon(0%_0%,50%_18%,100%_0%,100%_100%, 0_50%)] relative bg-center bg-cover"
-        style={{
-          backgroundImage: `url(${hero})`,
-        }}
-      />
-      <div className="absolute -left-0.5 -bottom-0.5  bg-background w-[20%] md:w-[26%] h-6 md:h-10 lg:h-13 rounded-tr-sm" />
-      <div className="absolute -right-0.5 -bottom-0.5 bg-background w-[20%] md:w-[26%] h-6 md:h-10 lg:h-13 rounded-tl-sm" />
+      <HeroCarousel />
     </section>
   )
 }

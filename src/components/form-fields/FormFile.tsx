@@ -1,19 +1,20 @@
-import type { FileStructure } from '@/utils/types'
+import type { FileStructure } from '@/types/onboard.types'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { Upload } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface FormFileProp {
   name: string
   handleFileChange: (
     field: string,
     file: FileList | null,
-    prevFile: FileStructure
+    prevFile: FileStructure,
   ) => void
-  handleFileUpload: (field: string, file: FileList) => void
-  handleSelectNewFile: (field: string, prevFile: FileStructure) => void
-  file: FileList | null
+  handleFileUpload: (field: string, file: File[]) => void
+  handleSelectNewFile: (field: string) => void
+  file: File[] | null
   label?: string
   required?: boolean
   ref?: any
@@ -51,7 +52,7 @@ export default function FormFile({
             onChange={(e) =>
               handleFileChange(name, e.target.files, fileUploaded)
             }
-            className="file:hidden font-normal rounded-none text-sm md:text-base pt-1.5 md:pt-1"
+            className="file:hidden font-normal rounded-none text-sm md:text-base pt-1.5 md:pt-1 cursor-pointer"
             required={required}
           />
         ) : (
@@ -72,7 +73,7 @@ export default function FormFile({
             type="button"
             size="sm"
             className="absolute right-0 top-0 h-full rounded-none"
-            onClick={() => handleSelectNewFile(name, fileUploaded)}
+            onClick={() => handleSelectNewFile(name)}
           >
             Change file
           </Button>
@@ -81,11 +82,12 @@ export default function FormFile({
       {fileUploaded?.selectNewFile && (
         <button
           type="button"
-          className={`border px-1 py-2 text-center font-normal space-y-1 ${
-            fileUploaded.selectNewFile ? 'opacity-100' : 'opacity-0'
-          }`}
-          disabled={!file}
-          onClick={() => file && handleFileUpload(name, file)}
+          className={`border px-1 py-2 text-center font-normal space-y-1 cursor-pointer disabled:no-cursor `}
+          onClick={() => {
+            file
+              ? handleFileUpload(name, file)
+              : toast.warning('Please choose a file')
+          }}
         >
           <Upload className="mx-auto w-4 h-4" />
           <p className="text-sm">Click to upload</p>

@@ -184,13 +184,13 @@ export const user = {
     postImages: [servicesAroundImage1, servicesAroundImage2],
     services: [
       {
-        id: 1,
+        id: '1',
         image: servicesImage1,
         desc: 'Fixing leaks (pipes, faucets)',
         price: 25000,
       },
       {
-        id: 2,
+        id: '2',
         image: servicesImage1,
         desc: 'Fixing leaks (pipes, faucets)',
         price: 20000,
@@ -1162,12 +1162,6 @@ export const faqData = {
         '1. Create an account and verify your details.\n2. Set up your profile with your skills, portfolio, and pricing.\n3. Post contents to the social feed that showcase your expertise.\n4. Start receiving bookings or apply to customer job posts.',
     },
   ],
-}
-
-export const referralPageData = {
-  title: 'Referral',
-  rewardAmount: 1000,
-  note: 'Note: Your referrals must have 3 hires before you can withdraw.',
 }
 
 export const mockWalletData = {

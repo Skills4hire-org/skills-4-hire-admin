@@ -1,32 +1,81 @@
-import { ChevronDown, Star, Heart, MapPin } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import Container from '@/components/global/Container'
 import HeaderWithBackNavigation from '@/components/header/HeaderWithBackNavigation'
 import SearchBar from '@/components/global/SearchBar'
-import ProfileImage from '@/components/global/ProfileImage'
-import { mockServices } from '@/assets/data'
 import { useParams } from 'react-router-dom'
-import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import Loading from '@/components/global/Loading'
+import Error from '@/components/global/Error'
+import { useAllProviders } from '@/hooks/useUsers'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
+import ServiceProviderServiceCard from '@/components/service-provider/ServiceProviderServiceCard'
+import type { Provider } from '@/types/user.types'
+import type { Favorite } from '@/types/favourites.type'
+import { useFavourites } from '@/hooks/useFavourites'
 
 export default function SingleService() {
   const { service } = useParams()
+  const formatService = service?.replaceAll('-', ' ')
   const [searchQuery, setSearchQuery] = useState('')
+  const [filters, setFilters] = useState({
+    min_charge: null,
+    ratings: null,
+    search: null,
+  })
 
-  const handleSearch = () => {}
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = useAllProviders({ profession: formatService, ...filters })
+
+  const {
+    data: favoritesData,
+    isLoading: favoritesLoading,
+    isError: favouritesError,
+  } = useFavourites()
+  const favourites: Favorite = favoritesData
+  const providersID = favourites?.providers?.map(
+    ({ provider_id }) => provider_id,
+  )
+  const professionals: Provider[] =
+    data?.pages.flatMap((page) => page.results) ?? []
+
+  const loadMoreRef = useInfiniteScroll({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  })
+  const handleProviderFetchingError = async () => {
+    if (!data) {
+      refetch()
+    } else {
+      fetchNextPage()
+    }
+  }
+
+  const handleFilters = (key: string, value: string) => {
+    setFilters({ ...filters, [key]: value })
+  }
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen ">
       <div className="capitalize">
-        <HeaderWithBackNavigation title={service} />
+        <HeaderWithBackNavigation title={formatService} />
       </div>
       <Container>
         <div className="space-y-4">
-          <div className="md:hidden">
+          <div>
             <SearchBar
               placeholder="Search service"
               maxWidth="100%"
               value={searchQuery}
               setSearchQuery={setSearchQuery}
-              onSubmit={handleSearch}
+              onSubmit={() => handleFilters('search', searchQuery)}
             />
           </div>
           <div className="hidden md:flex items-center justify-center gap-3">
@@ -42,79 +91,68 @@ export default function SingleService() {
             ))}
           </div>
           <div className="max-w-5xl mx-auto flex flex-col gap-6 sm:gap-8 md:gap-9 md:ml-0">
-            {mockServices.map((service) => (
-              <div key={service.id} className="relative">
-                <div className="relative w-full overflow-visible rounded-2xl">
-                  <img
-                    src={service.image}
-                    className="w-[99%] md:w-[98.5%] mx-auto rounded-2xl object-cover h-40 sm:h-60 md:h-72 lg:h-80"
-                  />
-
-                  <button className="absolute top-3 right-7 bg-white/90 p-2 rounded-full shadow-sm z-30">
-                    <Heart className="w-4 h-4 text-gray-700" />
-                  </button>
-
-                  <span
-                    className="
-                    absolute -bottom-4 sm:-bottom-5 md:-bottom-6 right-6 
-                    bg-primary text-white 
-                    text-xs sm:text-sm font-semibold 
-                    px-3 py-2 sm:px-4 sm:py-3.5 
-                    rounded-full shadow-lg z-30
-                  "
-                  >
-                    From ₦{service.priceFrom}
-                  </span>
-                </div>
-
-                <div className="mt-5 flex flex-col md:flex-row items-start md:items-center md:justify-between gap-2 sm:gap-3">
-                  <div className="flex items-center gap-3">
-                    <Link to={`/customer/service-provider/${service.id}`}>
-                      <ProfileImage />
-                    </Link>
-
-                    <div>
-                      <Link
-                        to={`/customer/service-provider/${service.id}`}
-                        className="no-underline hover:no-underline"
-                      >
-                        <p className="text-sm sm:text-base font-medium text-gray-800 flex items-center gap-2">
-                          {service.provider}
-                          <span className="text-primary text-[13px] italic font-medium">
-                            Verified
-                          </span>
-                        </p>
-                      </Link>
-
-                      <div className="flex items-center mt-0.5 gap-2">
-                        <div className="flex items-center">
-                          {[...Array(service.rating)].map((_, index) => (
-                            <Star
-                              key={index}
-                              className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400"
-                            />
-                          ))}
-                        </div>
-
-                        <span className="flex items-center gap-1 text-xs text-green-600">
-                          <MapPin className="w-3.5 h-3.5" />
-                          {service.location}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="w-full md:w-1/2 md:text-right mt-1">
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {service.excerpt}
-                    </p>
-                    <p className="text-xs sm:text-sm text-primary font-medium mt-1">
-                      Dependable and Skilled
-                    </p>
-                  </div>
-                </div>
+            {isLoading || favoritesLoading ? (
+              <div className="h-24">
+                <Loading />
               </div>
-            ))}
+            ) : (
+              <>
+                {!isError || favouritesError ? (
+                  <div className="py-10">
+                    <Error
+                      text="Failed to load professionals"
+                      buttonFunc={handleProviderFetchingError}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-4">
+                      {professionals?.map((professional) => (
+                        <ServiceProviderServiceCard
+                          key={professional.provider_id}
+                          {...professional}
+                          providerIDs={providersID}
+                          favouriteID={favourites?.favourite_id}
+                        />
+                      ))}
+                    </div>
+                    {professionals?.length == 0 && (
+                      <>
+                        <p className="text-center text-sm md:text-base text-gray-400 py-6">
+                          {filters.min_charge ||
+                          filters.ratings ||
+                          filters.search
+                            ? 'No professional found. Adjust your filters'
+                            : 'No professional providing this service yet. Check back later.'}
+                        </p>
+                      </>
+                    )}
+                    <div ref={loadMoreRef} />
+
+                    {isFetchingNextPage && (
+                      <div className="py-4 text-center">
+                        <Loading />
+                      </div>
+                    )}
+                    {hasNextPage && (
+                      <button
+                        className="shadow-sm px-4 py-1 text-sm md:text-base font-medium rounded-sm cursor-pointer hover:shadow-md"
+                        onClick={() => fetchNextPage()}
+                      >
+                        Load more
+                      </button>
+                    )}
+                    {isFetchNextPageError && (
+                      <Error
+                        text="Failed to load more professionals"
+                        buttonFunc={fetchNextPage}
+                        buttonText="Retry"
+                      />
+                    )}
+                  </>
+                )}
+              </>
+            )}
           </div>
         </div>
       </Container>

@@ -1,45 +1,29 @@
 import { Star } from 'lucide-react'
 import { Badge } from '../ui/badge'
 import { currencyFormatter } from '@/utils/format'
-import AddToFavoriteForm from '../form/AddToFavoriteForm'
 import { Link } from 'react-router-dom'
-
-interface ServiceProviderCardProp {
-  id: number
-  name: string
-  online: boolean
-  occupation: string
-  verified: boolean
-  desc: string
-  features: string
-  minCharge: number
-  averageRating: number
-  totalReviews: number
-  image: string
-  favorite: boolean
-}
+import AddToFavoriteButton from '../buttons/AddToFavoriteButton'
+import type { Provider } from '@/types/user.types'
 
 export default function ServiceProviderCard({
-  id,
-  name,
-  online,
-  occupation,
-  verified,
-  desc,
-  features,
-  minCharge,
-  averageRating,
-  totalReviews,
-  image,
-  favorite,
-}: ServiceProviderCardProp) {
+  provider_id,
+  profile,
+  professional_title,
+  avg_rating,
+  total_reviews,
+  providerIDs,
+  favouriteID,
+  min_charge,
+  headline,
+}: Provider) {
+  const isFavourite = providerIDs?.includes(provider_id)
   return (
     <div className="rounded-r-md flex bg-white shadow-md">
-      <Link to={`/customer/service-provider/${id}`}>
+      <Link to={`/customer/professionals/${provider_id}`}>
         <figure className="rounded-tr-4xl h-full ">
           <img
-            src={image}
-            alt={occupation}
+            src={profile?.avatar?.avatar}
+            alt={profile?.display_name}
             className="max-w-24 md:max-w-42 h-full object-cover rounded-tr-4xl"
             loading="lazy"
           />
@@ -48,49 +32,49 @@ export default function ServiceProviderCard({
       <div className="flex flex-1 flex-row gap-2 items-center justify-between p-2 md:p-4">
         <div className="space-y-1 md:gap-2">
           <div className="flex items-center gap-1 md:gap-2">
-            <Link to={`/customer/service-provider/${id}`}>
-              <h3 className="font-semibold text-sm md:text-lg">{name}</h3>
+            <Link to={`/customer/professionals/${provider_id}`}>
+              <h3 className="font-semibold text-sm md:text-lg">
+                {profile?.display_name}
+              </h3>
             </Link>
 
-            {online && (
+            {profile?.avatar?.is_active && (
               <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-green-600" />
             )}
           </div>
           <div className="flex items-center gap-2 md:gap-3">
             <Badge className="capitalize rounded-full font-normal py-0 px-2 md:py-1 md:px-4 text-xs md:text-sm">
-              {occupation}
+              {professional_title}
             </Badge>
-            {verified && (
-              <span className="text-primary italic text-xs md:text-sm">
-                Verified
-              </span>
-            )}
           </div>
           <div className="space-y-1">
-            <Link to={`/customer/service-provider/${id}`}>
-              <p className="font-medium text-xs md:text-sm line-clamp-2">
-                {desc}
+            <Link to={`/customer/professionals/${provider_id}`}>
+              <p className="font-medium text-xs md:text-sm line-clamp-3">
+                {headline}
               </p>
             </Link>
-
-            <p className="text-xs text-primary font-medium">{features}</p>
           </div>
         </div>
         <div className="flex flex-col justify-between gap-2 items-center h-full">
           <div className="flex items-center gap-1 font-medium sm:mt-1">
             <div className="flex items-center gap-0.5">
               <Star className="w-4 md:w-6 md:h-6 h-4 fill-yellow-600 text-yellow-600" />
-              <span className="text-xs md:text-sm">{averageRating}</span>
+              <span className="text-xs md:text-sm">{avg_rating}</span>
             </div>
             <span className="text-xs md:text-sm text-muted-foreground">
-              ({totalReviews})
+              ({total_reviews})
             </span>
           </div>
-          <AddToFavoriteForm id={name} type="provider" favorite={favorite} />
+          <AddToFavoriteButton
+            id={provider_id}
+            isFavourite={isFavourite}
+            name={profile?.display_name}
+            favouriteID={favouriteID}
+          />
           <div className="capitalize text-xs md:text-sm text-muted-foreground">
             from
             <span className="font-medium text-foreground ml-1">
-              {currencyFormatter(minCharge)}
+              {currencyFormatter(min_charge)}
             </span>
           </div>
         </div>

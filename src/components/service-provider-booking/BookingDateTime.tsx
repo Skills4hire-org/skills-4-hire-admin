@@ -1,4 +1,3 @@
-import type { ServiceProvider, ServiceProviderServiceCard } from '@/utils/types'
 import Container from '../global/Container'
 import SectionHeading from './SectionHeading'
 import ServiceProviderBookingCard from '../service-provider/ServiceProviderBookingCard'
@@ -7,17 +6,18 @@ import ServiceProviderServicesCard from '../service-provider/ServiceProviderServ
 import { Plus, X } from 'lucide-react'
 import BookingDateTimeForm from '../form/BookingDateTimeForm'
 import { useState } from 'react'
+import type { Profile, Service } from '@/types/user.types'
 
 export default function BookingDateTime({
   serviceProvider,
 }: {
-  serviceProvider: ServiceProvider | undefined
+  serviceProvider: Profile | undefined
 }) {
   const [showAllServices, setShowAllServices] = useState(false)
-  const { services }: { services: ServiceProviderServiceCard[] } = useSelector(
-    (state: any) => state.bookingState
+  const { services }: { services: Service[] } = useSelector(
+    (state: any) => state.bookingState,
   )
-  const servicesIds = services.map((service) => service.id)
+  const servicesIds = services.map((service) => service.service_id)
 
   return (
     <>
@@ -32,7 +32,10 @@ export default function BookingDateTime({
         {services && (
           <div className={`space-y-4 ${services.length !== 0 && 'mb-4'}`}>
             {services.map((service) => (
-              <ServiceProviderServicesCard key={service.id} {...service} />
+              <ServiceProviderServicesCard
+                key={service.service_id}
+                {...service}
+              />
             ))}
           </div>
         )}
@@ -40,9 +43,12 @@ export default function BookingDateTime({
           <div className={`space-y-4 ${!serviceProvider && 'mb-4'}`}>
             {!serviceProvider?.services ||
               serviceProvider?.services
-                .filter((service) => !servicesIds.includes(service.id))
+                .filter((service) => !servicesIds.includes(service.service_id))
                 ?.map((service) => (
-                  <ServiceProviderServicesCard key={service.id} {...service} />
+                  <ServiceProviderServicesCard
+                    key={service.service_id}
+                    {...service}
+                  />
                 ))}
           </div>
         )}
