@@ -102,9 +102,11 @@ export const useChatSocket = (
   useEffect(() => {
     if (!conversationId) return
 
-    const BASE_URL = import.meta.env.VITE_API_BASE_URL
+    const BASE_URL =
+      import.meta.env.VITE_API_BASE_URL || 'https://api.theskills4hire.com'
+    const wsUrl = BASE_URL.replace(/^http/, 'ws')
 
-    const ws = new WebSocket(`${BASE_URL}/ws/chats/${conversationId}/`)
+    const ws = new WebSocket(`${wsUrl}/ws/chats/${conversationId}/`)
 
     socketRef.current = ws
 

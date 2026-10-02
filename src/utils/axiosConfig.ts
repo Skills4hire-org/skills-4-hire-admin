@@ -18,8 +18,9 @@ const refreshAccessToken = async (): Promise<string> => {
 
   refreshPromise = new Promise(async (resolve, reject) => {
     try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || ''
       const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/refresh/token/`,
+        `${apiBase}/api/v1/auth/refresh/token/`,
         { refresh: refreshToken },
       )
 
@@ -53,7 +54,7 @@ const getStoredAdminToken = () => {
 }
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 60000,
   timeoutErrorMessage:
     'The request timed out. Kindly try again or refresh your page',
