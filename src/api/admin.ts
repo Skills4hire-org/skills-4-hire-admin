@@ -1,11 +1,28 @@
 import { api } from "@/utils/axiosConfig";
 import { handleApiError } from "./error";
 
+/**
+ * Normalizes backend responses where paginated/data payloads
+ * are wrapped inside `{ success: true, message: '...', data: { results: [...], count: 123 } }`.
+ * Preserves all original keys while hoisting `results`, `count`, etc.
+ */
+export const normalizeAdminResponse = (res: any) => {
+  if (res?.data && typeof res.data === "object" && !Array.isArray(res.data)) {
+    return {
+      ...res,
+      ...res.data,
+      results: res.data.results ?? res.results,
+      count: res.data.count ?? res.count,
+    };
+  }
+  return res;
+};
+
 // Bookings
 export const getAdminBookings = async (params?: any) => {
   try {
     const response = await api.get("/api/admin/bookings/", { params });
-    return response?.data;
+    return normalizeAdminResponse(response?.data);
   } catch (error) {
     handleApiError(error);
   }
@@ -51,7 +68,7 @@ export const refundAdminBooking = async (id: string, data: { refund_percent: num
 export const getAdminConversations = async (params?: any) => {
   try {
     const response = await api.get("/api/admin/conversations/", { params });
-    return response?.data;
+    return normalizeAdminResponse(response?.data);
   } catch (error) {
     handleApiError(error);
   }
@@ -116,7 +133,7 @@ export const deleteAdminService = async (id: string) => {
 export const getAdminSupports = async (params?: any) => {
   try {
     const response = await api.get("/api/admin/supports/", { params });
-    return response?.data;
+    return normalizeAdminResponse(response?.data);
   } catch (error) {
     handleApiError(error);
   }
@@ -162,7 +179,7 @@ export const assignAdminSupport = async (id: string, data: any) => {
 export const getAdminUsers = async (params?: any) => {
   try {
     const response = await api.get("/api/admin/users/", { params });
-    return response?.data;
+    return normalizeAdminResponse(response?.data);
   } catch (error) {
     handleApiError(error);
   }
@@ -216,7 +233,7 @@ export const deleteAdminUserAction = async (id: string, adminAction: string) => 
 export const getAdminUserReferrals = async (id: string) => {
   try {
     const response = await api.get(`/api/admin/users/${id}/referrals/`);
-    return response?.data;
+    return normalizeAdminResponse(response?.data);
   } catch (error) {
     handleApiError(error);
   }
@@ -226,7 +243,7 @@ export const getAdminUserReferrals = async (id: string) => {
 export const getAdminReferralWithdrawals = async (params?: any) => {
   try {
     const response = await api.get("/api/admin/referral-withdrawals/", { params });
-    return response?.data;
+    return normalizeAdminResponse(response?.data);
   } catch (error) {
     handleApiError(error);
   }
@@ -254,26 +271,21 @@ export const rejectAdminReferralWithdrawal = async (id: string, data?: any) => {
 export const getAdminApplicationCategories = async (params?: any) => {
   try {
     const response = await api.get("/api/admin/application/category/", { params });
-    return response?.data;
+    return normalizeAdminResponse(response?.data);
   } catch (error: any) {
     console.error("getAdminApplicationCategories error:", error.response?.data || error.message);
     throw error;
   }
 };
 
-// Service Categories (used as fallback for job category list)
+// Service Categories (list endpoint: GET /api/v1/services-categories/)
 export const getAdminServiceCategories = async (params?: any) => {
   try {
-    const response = await api.get("/api/admin/service/", { params });
-    return response?.data;
+    const response = await api.get("/api/v1/services-categories/", { params });
+    return normalizeAdminResponse(response?.data);
   } catch (error: any) {
-    try {
-      const fallback = await api.get("/api/services/", { params });
-      return fallback?.data;
-    } catch (fallbackError: any) {
-      console.error("getAdminServiceCategories error:", fallbackError.response?.data || fallbackError.message);
-      throw fallbackError;
-    }
+    console.error("getAdminServiceCategories error:", error.response?.data || error.message);
+    throw error;
   }
 };
 
@@ -281,7 +293,7 @@ export const getAdminServiceCategories = async (params?: any) => {
 export const getAdminJobs = async (params?: any) => {
   try {
     const response = await api.get("/api/admin/application/external/", { params });
-    return response?.data;
+    return normalizeAdminResponse(response?.data);
   } catch (error: any) {
     console.error("getAdminJobs error:", error.response?.data || error.message);
     throw error;

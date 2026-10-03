@@ -1,12 +1,9 @@
+import { useEffect, useState } from "react";
 import { ArrowUpRight, TrendingUp, MapPin } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { getAdminBookings, getAdminUsers } from "@/api/admin";
 
-const METRICS = [
-  { id: 1, title: "Total Bookings", value: "4,000", trend: "8.5%" },
-  { id: 2, title: "Revenue", value: "₦ 4,000", trend: "8.5%" },
-  { id: 3, title: "Revenue", value: "4.5%", trend: "8.5%" },
-  { id: 4, title: "Repeating Bookings", value: "40%", trend: "8.5%" },
-];
+
 
 const LOCATIONS = [
   { id: 1, name: "Lagos", customers: "1234", percentage: 70 },
@@ -27,6 +24,60 @@ const TOP_PROVIDERS = [
 ];
 
 export default function Analytics() {
+  const [bookingCount, setBookingCount] = useState<number | null>(null);
+  const [totalRevenue, setTotalRevenue] = useState<number | null>(null);
+  const [userCount, setUserCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [bookingsData, usersData] = await Promise.all([
+          getAdminBookings({ page_size: 200 }),
+          getAdminUsers(),
+        ]);
+        if (bookingsData) {
+          const results = bookingsData.results ?? bookingsData.data?.results ?? (Array.isArray(bookingsData) ? bookingsData : []);
+          setBookingCount(bookingsData.count ?? bookingsData.data?.count ?? results.length);
+          const rev = results.reduce((acc: number, b: any) => acc + (parseFloat(b.price) || 0), 0);
+          setTotalRevenue(rev);
+        }
+        if (usersData) {
+          setUserCount(usersData.count ?? usersData.data?.count ?? usersData.results?.length ?? 0);
+        }
+      } catch (err) {
+        console.error("Analytics: failed to fetch stats", err);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const METRICS = [
+    {
+      id: 1,
+      title: "Total Bookings",
+      value: bookingCount !== null ? bookingCount.toLocaleString() : "—",
+      trend: "Live",
+    },
+    {
+      id: 2,
+      title: "Revenue",
+      value: totalRevenue !== null ? "₦ " + totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—",
+      trend: "Live",
+    },
+    {
+      id: 3,
+      title: "Active Users",
+      value: userCount !== null ? userCount.toLocaleString() : "—",
+      trend: "Live",
+    },
+    {
+      id: 4,
+      title: "Repeating Bookings",
+      value: bookingCount && bookingCount > 0 ? "—" : "—",
+      trend: "8.5%",
+    },
+  ];
+
   return (
     <div className="flex flex-col w-full h-full mt-2 relative pb-10">
       <h1 className="text-[28px] lg:text-3xl font-semibold text-gray-900 tracking-tight mb-8">
@@ -106,8 +157,8 @@ export default function Analytics() {
             </h2>
 
             <div className="flex-1 flex flex-col xl:flex-row items-center justify-center gap-8 xl:gap-4 relative w-full mt-4">
-              <div className="h-[200px] w-[200px] relative shrink-0">
-                <ResponsiveContainer width="100%" height="100%">
+              <div style={{ height: 200, width: 200 }} className="relative shrink-0">
+                <ResponsiveContainer width={200} height={200}>
                   <PieChart>
                     <Pie
                       data={ACQUISITION_DATA}

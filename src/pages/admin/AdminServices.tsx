@@ -25,13 +25,8 @@ export default function AdminServices() {
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      // In the schema, GET /api/admin/service/ is not listed directly as a GET endpoint,
-      // but let's check if there's a list endpoint or if we can fetch categories from the public API or fallback.
-      // Usually, there is a GET endpoint on `/api/services/` or `/api/admin/service/`.
-      // Let's call GET /api/admin/service/ or fetch from public service categories.
-      const response = await api.get("/api/admin/service/").catch(async () => {
-        return await api.get("/api/services/");
-      });
+      // Correct endpoint: GET /api/v1/services-categories/
+      const response = await api.get("/api/v1/services-categories/");
       if (response && response.data) {
         setCategories(Array.isArray(response.data) ? response.data : response.data.results || []);
       }

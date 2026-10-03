@@ -129,11 +129,26 @@ export default function Jobs() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        // Extract a plain string UUID from whatever shape the API returns for an ID field
+        const extractId = (val: any): string => {
+          if (!val && val !== 0) return "";
+          if (typeof val === "string") return val;
+          if (typeof val === "number") return String(val);
+          // val is an object — try common UUID/id field names
+          if (typeof val === "object") {
+            return String(
+              val.category_id ?? val.service_category_id ??
+              val.id ?? val.uuid ?? val.pk ?? ""
+            );
+          }
+          return String(val);
+        };
+
         const normalize = (raw: any[]): CategoryOption[] =>
           raw.map((item) => ({
-            id: item.category_id ?? item.id ?? String(item),
-            name: item.name ?? item.category_name ?? String(item),
-          }));
+            id: extractId(item.category_id ?? item.service_category_id ?? item.id ?? item),
+            name: String(item.name ?? item.category_name ?? ""),
+          })).filter(c => c.id && c.name);  // drop items with no usable id or name
         const toArray = (res: any): any[] => {
           if (!res) return [];
           return Array.isArray(res)
@@ -219,6 +234,10 @@ export default function Jobs() {
         ...formData,
         min_charge: formData.min_charge ? parseFloat(formData.min_charge) : null,
         max_charge: formData.max_charge ? parseFloat(formData.max_charge) : null,
+        // Ensure category is always a plain string UUID, never an object
+        category: formData.category && typeof formData.category === "string"
+          ? formData.category.trim() || undefined
+          : undefined,
       };
       if (editingJob) {
         if (!editingJob.id) {
@@ -715,8 +734,8 @@ export default function Jobs() {
                 </label>
                 <select name="category" value={formData.category} onChange={handleInputChange} className={inputClass}>
                   <option value="">Select a category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  {categories.map((cat, idx) => (
+                    <option key={`cat-${String(cat.id ?? idx)}-${idx}`} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
                 {categories.length === 0 && (

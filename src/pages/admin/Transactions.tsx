@@ -31,18 +31,8 @@ export type BookingStatusType = "Pending" | "Funded" | "In_progress" | "Complete
 export type AdminBooking = {
   booking_id: string;
   booking_status: BookingStatusType;
-  customer: {
-    user_id?: string;
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-    phone?: string;
-    profile?: {
-      display_name?: string;
-      professional_title?: string;
-    };
-  };
-  provider: string;
+  customer?: any;
+  provider?: any;
   location?: string | null;
   is_remote?: boolean;
   currency?: string;
@@ -139,10 +129,19 @@ export default function Transactions() {
   };
 
   // Format customer name
-  const getCustomerName = (customer?: AdminBooking["customer"]) => {
+  const getCustomerName = (customer?: any) => {
     if (!customer) return "Customer";
+    if (typeof customer === "string") return customer;
     const name = `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
     return name || customer.profile?.display_name || customer.email || "Customer";
+  };
+
+  // Format provider name
+  const getProviderName = (provider?: any) => {
+    if (!provider) return "Not assigned";
+    if (typeof provider === "string") return provider;
+    const name = `${provider.first_name || ""} ${provider.last_name || ""}`.trim();
+    return name || provider.profile?.display_name || provider.email || "Provider";
   };
 
   // Format date
@@ -168,9 +167,10 @@ export default function Transactions() {
       };
       const data = await getAdminBookings(params);
       if (data) {
-        const list: AdminBooking[] = data.results || (Array.isArray(data) ? data : []);
+        const payload = data.data || data;
+        const list: AdminBooking[] = payload.results || (Array.isArray(payload) ? payload : []);
         setBookings(list);
-        setTotalBookings(data.count || list.length || 0);
+        setTotalBookings(payload.count || list.length || 0);
       }
     } catch (err) {
       console.error("Failed to fetch admin bookings:", err);
@@ -184,8 +184,9 @@ export default function Transactions() {
     setLoadingReferrals(true);
     try {
       const data = await getAdminReferralWithdrawals();
-      if (data && (data.results || Array.isArray(data))) {
-        const list = data.results || data;
+      const payload = data?.data || data;
+      if (payload && (payload.results || Array.isArray(payload))) {
+        const list = payload.results || payload;
         setReferrals(list.length > 0 ? list : FALLBACK_REFERRALS);
       } else {
         setReferrals(FALLBACK_REFERRALS);
@@ -404,7 +405,7 @@ export default function Transactions() {
                       </div>
                     </td>
                     <td className="py-3">
-                      <span className="text-gray-800 font-medium">{row.provider || "Not assigned"}</span>
+                      <span className="text-gray-800 font-medium">{getProviderName(row.provider)}</span>
                     </td>
                     <td className="py-3">
                       <span className="text-xs text-gray-600 font-medium bg-white/60 px-2.5 py-1 rounded-lg border border-gray-200/60 inline-flex items-center gap-1">
@@ -514,7 +515,7 @@ export default function Transactions() {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-500 font-medium">Handyman / Provider</span>
-                        <span className="text-sm font-semibold text-gray-800">{txn.provider || "Not assigned"}</span>
+                        <span className="text-sm font-semibold text-gray-800">{getProviderName(txn.provider)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-500 font-medium">Type</span>
@@ -735,7 +736,10 @@ export default function Transactions() {
 
                   <div className="bg-gray-50/70 p-3.5 rounded-2xl border border-gray-100">
                     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Provider</span>
-                    <p className="font-bold text-gray-900 text-sm">{selectedBooking.provider || "Not assigned"}</p>
+                    <p className="font-bold text-gray-900 text-sm">{getProviderName(selectedBooking.provider)}</p>
+                    {typeof selectedBooking.provider === "object" && selectedBooking.provider?.email && (
+                      <p className="text-xs text-gray-500 mt-0.5">{selectedBooking.provider.email}</p>
+                    )}
                     <p className="text-xs text-gray-500 mt-0.5">
                       {selectedBooking.is_remote ? "Remote Service" : (selectedBooking.location || "On-site")}
                     </p>

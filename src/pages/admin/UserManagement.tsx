@@ -4,16 +4,19 @@ import { getAdminUsers, patchAdminUser, deleteAdminUser, patchAdminUserAction } 
 
 type UserType = {
   user_id: string;
-  first_name: string;
-  last_name: string;
+  first_name?: string | null;
+  last_name?: string | null;
   email: string;
-  phone: string;
-  active_role: string;
+  phone?: string | null;
+  active_role?: string | null;
   is_active: boolean;
   is_provider: boolean;
   is_customer: boolean;
-  referral_count: string;
+  referral_count: number | string;
   avatar?: string;
+  login_provider?: string;
+  is_verified?: boolean;
+  created_at?: string;
 };
 
 export default function UserManagement() {
@@ -25,7 +28,7 @@ export default function UserManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
-  const itemsPerPage = 8;
+  const itemsPerPage = 50; // DRF backend returns 50 users per page
   const totalPages = Math.ceil(totalCount / itemsPerPage) || 1;
 
   // Fetch Users
@@ -34,16 +37,29 @@ export default function UserManagement() {
     try {
       const params: any = {
         page: currentPage,
-        search: searchQuery || undefined,
-        active_role: roleFilter || undefined,
+        search: searchQuery.trim() || undefined,
       };
+      if (roleFilter === "PROVIDER") {
+        params.is_provider = true;
+      } else if (roleFilter === "CUSTOMER") {
+        params.is_customer = true;
+      } else if (roleFilter === "ACTIVE") {
+        params.is_active = true;
+      }
+
       const data = await getAdminUsers(params);
       if (data) {
-        setUsers(data.results || []);
-        setTotalCount(data.count || data.results?.length || 0);
+        const payload = data.data || data;
+        const list = Array.isArray(payload.results)
+          ? payload.results
+          : Array.isArray(payload)
+          ? payload
+          : [];
+        setUsers(list);
+        setTotalCount(payload.count ?? list.length ?? 0);
       }
     } catch (error) {
-      console.error(error);
+      console.error("UserManagement fetch error:", error);
     } finally {
       setLoading(false);
     }
@@ -59,6 +75,22 @@ export default function UserManagement() {
     fetchUsers();
   };
 
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, "…", totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1, "…", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, "…", currentPage - 1, currentPage, currentPage + 1, "…", totalPages);
+      }
+    }
+    return pages;
+  };
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
@@ -71,12 +103,11 @@ export default function UserManagement() {
     phone: "",
   });
 
-
   const openEditModal = (user: UserType) => {
     setEditingUser(user);
     setFormData({
-      first_name: user.first_name,
-      last_name: user.last_name,
+      first_name: user.first_name || "",
+      last_name: user.last_name || "",
       email: user.email || "",
       phone: user.phone || "",
     });
@@ -137,7 +168,7 @@ export default function UserManagement() {
         {/* Header row */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
-            {totalCount} Total Users
+            {totalCount.toLocaleString()} Total Users
           </h2>
           
           <form onSubmit={handleSearchSubmit} className="flex flex-wrap items-center gap-3">
@@ -156,10 +187,10 @@ export default function UserManagement() {
               }}
               className="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
-              <option value="">All Roles</option>
-              <option value="ADMIN">Admin</option>
-              <option value="CUSTOMER">Customer</option>
-              <option value="SERVICE_PROVIDER">Service Provider</option>
+              <option value="">All Users</option>
+              <option value="PROVIDER">Service Providers</option>
+              <option value="CUSTOMER">Customers</option>
+              <option value="ACTIVE">Active Users</option>
             </select>
             <button
               type="submit"
@@ -189,64 +220,71 @@ export default function UserManagement() {
                 </tr>
               </thead>
               <tbody className="space-y-4">
-                {users.map((user) => (
-                  <tr 
-                    key={user.user_id} 
-                    className="group text-[15px] font-medium text-gray-700 hover:bg-white/40 rounded-lg transition-colors"
-                  >
-                    <td className="py-3 pl-2 rounded-l-lg truncate max-w-[200px]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 shrink-0 flex items-center justify-center font-bold text-blue-600 text-sm">
-                          {user.first_name[0]}{user.last_name[0]}
+                {users.map((user) => {
+                  const initial1 = user.first_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "U";
+                  const initial2 = user.last_name?.[0]?.toUpperCase() || "";
+                  const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email || "User";
+                  const roleLabel = user.active_role || (user.is_provider ? "PROVIDER" : user.is_customer ? "CUSTOMER" : "USER");
+
+                  return (
+                    <tr 
+                      key={user.user_id} 
+                      className="group text-[15px] font-medium text-gray-700 hover:bg-white/40 rounded-lg transition-colors"
+                    >
+                      <td className="py-3 pl-2 rounded-l-lg truncate max-w-[200px]">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 shrink-0 flex items-center justify-center font-bold text-blue-600 text-sm">
+                            {initial1}{initial2}
+                          </div>
+                          <span className="truncate" title={fullName}>{fullName}</span>
                         </div>
-                        <span className="truncate">{user.first_name} {user.last_name}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 truncate max-w-[200px]">{user.email || "N/A"}</td>
-                    <td className="py-3">{user.phone || "N/A"}</td>
-                    <td className="py-3">
-                      <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-200 text-gray-800">
-                        {user.active_role}
-                      </span>
-                    </td>
-                    <td className="py-3">
-                      <button
-                        onClick={() => handleToggleActive(user)}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                          user.is_active 
-                            ? "bg-green-100 text-green-700 hover:bg-green-200" 
-                            : "bg-red-100 text-red-700 hover:bg-red-200"
-                        }`}
-                      >
-                        {user.is_active ? "Active" : "Deactivated"}
-                      </button>
-                    </td>
-                    <td className="py-3 pr-2 rounded-r-lg">
-                      <div className="flex items-center justify-end gap-3 pr-2">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEditModal(user);
-                          }}
-                          className="text-gray-600 hover:text-blue-600 transition-colors p-1 bg-transparent hover:bg-white rounded-md shadow-sm"
-                          title="Edit"
+                      </td>
+                      <td className="py-3 truncate max-w-[200px]" title={user.email || "N/A"}>{user.email || "N/A"}</td>
+                      <td className="py-3">{user.phone || "N/A"}</td>
+                      <td className="py-3">
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-200 text-gray-800">
+                          {roleLabel}
+                        </span>
+                      </td>
+                      <td className="py-3">
+                        <button
+                          onClick={() => handleToggleActive(user)}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                            user.is_active 
+                              ? "bg-green-100 text-green-700 hover:bg-green-200" 
+                              : "bg-red-100 text-red-700 hover:bg-red-200"
+                          }`}
                         >
-                          <Pencil className="w-[18px] h-[18px]" />
+                          {user.is_active ? "Active" : "Deactivated"}
                         </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(user.user_id);
-                          }}
-                          className="text-gray-600 hover:text-red-500 transition-colors p-1 bg-transparent hover:bg-white rounded-md shadow-sm"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-[18px] h-[18px]" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="py-3 pr-2 rounded-r-lg">
+                        <div className="flex items-center justify-end gap-3 pr-2">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditModal(user);
+                            }}
+                            className="text-gray-600 hover:text-blue-600 transition-colors p-1 bg-transparent hover:bg-white rounded-md shadow-sm"
+                            title="Edit"
+                          >
+                            <Pencil className="w-[18px] h-[18px]" />
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(user.user_id);
+                            }}
+                            className="text-gray-600 hover:text-red-500 transition-colors p-1 bg-transparent hover:bg-white rounded-md shadow-sm"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-[18px] h-[18px]" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {users.length === 0 && (
                   <tr>
                     <td colSpan={6} className="text-center py-8 text-gray-500">
@@ -261,38 +299,52 @@ export default function UserManagement() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center mt-12 mb-4 gap-2 text-sm font-medium">
-            <button 
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-5 h-5"/>
-            </button>
-            
-            {Array.from({ length: totalPages }).map((_, idx) => {
-              const pageNumber = idx + 1;
-              const isActive = pageNumber === currentPage;
-              return (
-                <button 
-                  key={pageNumber}
-                  onClick={() => setCurrentPage(pageNumber)}
-                  className={`w-8 h-8 rounded-full flex flex-col justify-center items-center transition-colors ${
-                    isActive ? "bg-[#243cd6] text-white" : "hover:bg-gray-200 text-gray-600 bg-gray-100"
-                  }`}
-                >
-                  {pageNumber}
-                </button>
-              );
-            })}
+          <div className="flex flex-col sm:flex-row items-center justify-between mt-8 mb-4 gap-4 text-sm font-medium">
+            <span className="text-gray-500">
+              Page {currentPage} of {totalPages} ({totalCount.toLocaleString()} total users)
+            </span>
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-5 h-5"/>
+              </button>
+              
+              {getPageNumbers().map((p, idx) => {
+                if (p === "…") {
+                  return (
+                    <span key={`ellipsis-${idx}`} className="px-2 text-gray-400 select-none">
+                      …
+                    </span>
+                  );
+                }
+                const pageNumber = p as number;
+                const isActive = pageNumber === currentPage;
+                return (
+                  <button 
+                    key={pageNumber}
+                    onClick={() => setCurrentPage(pageNumber)}
+                    className={`min-w-[36px] h-9 px-2 rounded-lg flex justify-center items-center text-sm font-medium transition-colors ${
+                      isActive ? "bg-[#243cd6] text-white" : "hover:bg-gray-200 text-gray-700 bg-white/70"
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              })}
 
-            <button 
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-5 h-5"/>
-            </button>
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-5 h-5"/>
+              </button>
+            </div>
           </div>
         )}
       </div>

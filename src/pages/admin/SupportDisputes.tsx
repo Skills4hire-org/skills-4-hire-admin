@@ -61,6 +61,13 @@ const StatusPill = ({ status }: { status: string }) => {
   );
 };
 
+const formatSupportCustomer = (cust?: any) => {
+  if (!cust) return "Unknown User";
+  if (typeof cust === "string") return cust;
+  const name = [cust.first_name, cust.last_name].filter(Boolean).join(" ");
+  return name || cust.profile?.display_name || cust.email || "Unknown User";
+};
+
 export default function SupportDisputes() {
   const [supportCases, setSupportCases] = useState<SupportCase[]>([]);
   const [selectedCase, setSelectedCase] = useState<SupportCase | null>(null);
@@ -75,7 +82,8 @@ export default function SupportDisputes() {
     try {
       const data = await getAdminSupports(searchQuery ? { search: searchQuery } : undefined);
       if (data) {
-        const results = data.results || [];
+        const payload = data.data || data;
+        const results = payload.results || (Array.isArray(payload) ? payload : []);
         setSupportCases(results);
         if (results.length > 0 && !selectedCase) {
           setSelectedCase(results[0]);
@@ -177,8 +185,8 @@ export default function SupportDisputes() {
             <h2 className="text-xl lg:text-2xl font-bold text-gray-900 leading-none">Support Tickets & Disputes</h2>
           </div>
         </div>
-        <div className="w-full h-[160px]">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full" style={{ height: 160, minHeight: 160 }}>
+          <ResponsiveContainer width="100%" height={160} minHeight={160}>
             <AreaChart data={CHART_DATA} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="supportColor" x1="0" y1="0" x2="0" y2="1">
@@ -229,7 +237,7 @@ export default function SupportDisputes() {
               >
                 <div className="flex justify-between items-start mb-2">
                   <span className="font-semibold text-sm truncate pr-2">
-                    {ticket.customer ? `${ticket.customer.first_name} ${ticket.customer.last_name}` : "Unknown User"}
+                    {formatSupportCustomer(ticket.customer)}
                   </span>
                   <span className={cn(
                     "text-[10px] font-medium shrink-0",
@@ -268,7 +276,7 @@ export default function SupportDisputes() {
                   </button>
                   <div className="min-w-0">
                     <h3 className="font-bold text-gray-900 truncate">
-                      {selectedCase.customer ? `${selectedCase.customer.first_name} ${selectedCase.customer.last_name}` : "Unknown User"}
+                      {formatSupportCustomer(selectedCase.customer)}
                     </h3>
                     <p className="text-xs text-gray-500 truncate">Ticket: {selectedCase.support_id}</p>
                   </div>

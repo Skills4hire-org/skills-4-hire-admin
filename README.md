@@ -429,3 +429,34 @@ The full raw response is also logged to the browser console under `[API Error Re
 | **Token Storage** | `localStorage` â†’ key `admin_token` |
 
 > **Why `POST`?** Credentials must never travel via URL query parameters (as in `GET`). `POST` places them securely in the request body, which is the industry-standard approach for authentication endpoints.
+
+---
+
+## Changelog — `2026-10-03` — API Fixes & Real Data Wiring
+
+### 1. Fixed Service Categories 405 / 404 Errors
+**Files**: `src/pages/admin/AdminServices.tsx`, `src/api/admin.ts`  
+The app was calling wrong endpoints (`GET /api/admin/service/` ? 405, `GET /api/services/` ? 404). Fixed to use: `GET /api/v1/services-categories/`  
+
+### 2. Fixed Recharts `width(-1) height(-1)` Warnings
+**Files**: `SupportDisputes.tsx`, `Analytics.tsx`, `Overview.tsx`  
+Changed `ResponsiveContainer` to use explicit pixel dimensions instead of `width=100%/height=100%`.
+
+### 3. `Finance.tsx` — Wired to Real APIs
+Now fetches real data from: `GET /api/admin/bookings/` and `GET /api/admin/referral-withdrawals/`.  
+Approve/Reject withdrawal buttons call real API endpoints.  
+Summary cards compute: Total Booking Revenue, Pending Withdrawals, Approved Payouts.
+
+### 4. `ContentModeration.tsx` — Wired to Real API
+Fetches posts from `GET /api/v1/posts/?page={n}` with pagination.  
+Delete post calls `DELETE /api/v1/posts/{id}/`.  
+Engagement stats (active/flagged counts, views, comments) computed from live data.
+
+### 5. `Overview.tsx` — Real Chart Data
+- Bookings PieChart: real `booking_status` breakdown  
+- Monthly LineChart: real monthly counts from `created_at`  
+- Top Services: real category names from `GET /api/v1/services-categories/`  
+- Counts from `GET /api/admin/users/` and `GET /api/admin/bookings/`  
+
+### 6. `Analytics.tsx` — Live Metrics Cards
+Total Bookings, Revenue, and Active Users cards now pull from real API instead of hardcoded values.
