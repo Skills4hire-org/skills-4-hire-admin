@@ -7,8 +7,8 @@ import FormInput from '../form-fields/FormInput'
 import { toast } from 'sonner'
 import { setAuthToken } from '@/utils/auth'
 
-const ADMIN_EMAIL = 'ogennaisrael98@gmail.com'
-const ADMIN_PASSWORD = '0987poiu'
+const ADMIN_EMAIL = 'testadmin@gmail.com'
+const ADMIN_PASSWORD = 'word 3030'
 
 interface SignInFormProps {
   initialEmail?: string
@@ -41,11 +41,14 @@ export default function SignInForm({ initialEmail, initialPassword }: SignInForm
     try {
       const authData = await adminLogin(validatedData)
 
-      if (!authData?.access) {
+      // API response shape: { success, message, data: { access, refresh } }
+      const token = authData?.data?.access || authData?.access
+
+      if (!token) {
         throw new Error('Admin login did not return an access token')
       }
 
-      setAuthToken(authData.access)
+      setAuthToken(token)
       const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/admin'
       navigate(from, { replace: true })
     } catch (error: any) {
