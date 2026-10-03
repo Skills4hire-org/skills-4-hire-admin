@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://api.theskills4hire.com/api/$1"
+      "destination": "/api/proxy"
     },
     {
       "source": "/(.*)",

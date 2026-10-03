@@ -32,8 +32,17 @@ export const detectServiceType = (title: string) => {
 }
 
 export const isTokenExpired = (token: string) => {
+  if (!token) return true
+
+  // If token is not formatted as a JWT (3 dot-separated segments),
+  // treat as non-expiring opaque or development mock token.
+  if (token.split('.').length !== 3) {
+    return false
+  }
+
   try {
     const decoded = jwtDecode<JwtPayload>(token)
+    if (!decoded || !decoded.exp) return false
     return decoded.exp * 1000 < Date.now()
   } catch {
     return true

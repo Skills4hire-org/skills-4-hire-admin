@@ -1,5 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import AdminLayout from './components/layouts/AdminLayout'
+import ProtectedRoute from './components/routes/ProtectedRoute'
+import PublicRoute from './components/routes/PublicRoute'
 import UserManagement from './pages/admin/UserManagement'
 import AdminServices from './pages/admin/AdminServices'
 import SupportDisputes from './pages/admin/SupportDisputes'
@@ -14,83 +16,86 @@ import SignIn from './pages/Signin'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPasswordConfirm from './pages/ResetPasswordConfirm'
 
-const AdminRoute = () => {
-  const token =
-    localStorage.getItem('admin_token') ||
-    localStorage.getItem('accessToken') ||
-    localStorage.getItem('token') ||
-    localStorage.getItem('access')
-
-  if (!token) {
-    return <Navigate to="/sign-in" replace />
-  }
-
-  return <AdminLayout />
-}
-
 const router = createBrowserRouter([
+  // Root redirect
   {
     path: '/',
     element: <Navigate to="/admin" replace />,
   },
+
+  // Public Authentication Routes (Guarded: redirect to /admin if already logged in)
   {
-    path: 'sign-in',
-    element: <SignIn />,
-  },
-  {
-    path: 'forgot-password',
-    element: <ForgotPassword />,
-  },
-  {
-    path: 'password/reset-confirm',
-    element: <ResetPasswordConfirm />,
-  },
-  {
-    path: '/admin',
-    element: <AdminRoute />,
+    element: <PublicRoute />,
     children: [
       {
-        index: true,
-        element: <Overview />,
+        path: 'sign-in',
+        element: <SignIn />,
       },
       {
-        path: 'user-management',
-        element: <UserManagement />,
+        path: 'forgot-password',
+        element: <ForgotPassword />,
       },
       {
-        path: 'services',
-        element: <AdminServices />,
-      },
-      {
-        path: 'jobs',
-        element: <Jobs />,
-      },
-      {
-        path: 'support',
-        element: <SupportDisputes />,
-      },
-      {
-        path: 'transactions',
-        element: <Transactions />,
-      },
-      {
-        path: 'financial',
-        element: <Finance />,
-      },
-      {
-        path: 'content-moderation',
-        element: <ContentModeration />,
-      },
-      {
-        path: 'analytics',
-        element: <Analytics />,
-      },
-      {
-        path: 'providers/:id',
-        element: <ProviderDetails />,
+        path: 'password/reset-confirm',
+        element: <ResetPasswordConfirm />,
       },
     ],
   },
+
+  // Protected Admin Routes (Guarded: redirect to /sign-in if not authenticated)
+  {
+    path: '/admin',
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <AdminLayout />,
+        children: [
+          {
+            index: true,
+            element: <Overview />,
+          },
+          {
+            path: 'user-management',
+            element: <UserManagement />,
+          },
+          {
+            path: 'services',
+            element: <AdminServices />,
+          },
+          {
+            path: 'jobs',
+            element: <Jobs />,
+          },
+          {
+            path: 'support',
+            element: <SupportDisputes />,
+          },
+          {
+            path: 'transactions',
+            element: <Transactions />,
+          },
+          {
+            path: 'financial',
+            element: <Finance />,
+          },
+          {
+            path: 'content-moderation',
+            element: <ContentModeration />,
+          },
+          {
+            path: 'analytics',
+            element: <Analytics />,
+          },
+          {
+            path: 'providers/:id',
+            element: <ProviderDetails />,
+          },
+        ],
+      },
+    ],
+  },
+
+  // Fallback Wildcard Catch-All Route
   {
     path: '*',
     element: <Navigate to="/admin" replace />,

@@ -1,7 +1,8 @@
-import { logoutUser, setAccessToken } from '@/features/user/userSlice'
+import { setAccessToken } from '@/features/user/userSlice'
 import { store } from '@/store'
 import axios from 'axios'
 import { isTokenExpired } from './helpers'
+import { getAuthToken, clearAuthTokens } from './auth'
 
 let refreshPromise: Promise<string> | null = null
 
@@ -12,7 +13,7 @@ const refreshAccessToken = async (): Promise<string> => {
   const refreshToken = state.userState.refresh
 
   if (!refreshToken) {
-    store.dispatch(logoutUser())
+    clearAuthTokens()
     throw new Error('No refresh token')
   }
 
@@ -30,7 +31,7 @@ const refreshAccessToken = async (): Promise<string> => {
 
       resolve(newAccess)
     } catch (err) {
-      store.dispatch(logoutUser())
+      clearAuthTokens()
       reject(err)
     } finally {
       refreshPromise = null
@@ -38,19 +39,6 @@ const refreshAccessToken = async (): Promise<string> => {
   })
 
   return refreshPromise
-}
-
-const getStoredAdminToken = () => {
-  const tokenKeys = ["admin_token", "accessToken", "token", "access"]
-
-  for (const key of tokenKeys) {
-    const value = localStorage.getItem(key)
-    if (value) {
-      return value
-    }
-  }
-
-  return null
 }
 
 export const api = axios.create({
@@ -63,7 +51,7 @@ export const api = axios.create({
 /* REQUEST INTERCEPTOR */
 api.interceptors.request.use(async (config) => {
   const state = store.getState()
-  let token = state.userState.access || getStoredAdminToken()
+  let token = state.userState.access || getAuthToken()
 
   if (token) {
     if (isTokenExpired(token)) {

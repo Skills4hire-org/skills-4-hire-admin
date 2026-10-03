@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { 
   Search, 
   Bell, 
@@ -11,12 +11,14 @@ import {
   ShieldAlert, 
   HeadphonesIcon, 
   TrendingUp, 
-  UserCog,
-  Menu,
-  X,
-  Briefcase
+  Menu, 
+  X, 
+  Briefcase,
+  LogOut
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { clearAuthTokens } from "@/utils/auth";
+import { toast } from "sonner";
 
 const SIDEBAR_LINKS = [
   { name: "Overview", href: "/admin", icon: LayoutGrid, exact: true },
@@ -28,11 +30,18 @@ const SIDEBAR_LINKS = [
   { name: "Content Moderation", href: "/admin/content-moderation", icon: ShieldAlert },
   { name: "Support & Disputes", href: "/admin/support", icon: HeadphonesIcon },
   { name: "Analytics", href: "/admin/analytics", icon: TrendingUp },
-  { name: "Admin Roles", href: "/admin/roles", icon: UserCog },
 ];
 
 export default function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    clearAuthTokens();
+    toast.success("Logged out successfully");
+    navigate("/sign-in", { replace: true });
+  };
 
   return (
     <div className="flex h-screen w-full bg-white overflow-hidden font-sans relative">
@@ -89,6 +98,17 @@ export default function AdminLayout() {
             );
           })}
         </nav>
+
+        {/* Sidebar Footer Logout */}
+        <div className="p-4 border-t border-white/10 shrink-0">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 rounded-md text-white/80 hover:bg-red-500/20 hover:text-red-200 transition-colors text-[15px] font-medium w-full cursor-pointer"
+          >
+            <LogOut className="w-5 h-5" />
+            Sign Out
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -103,7 +123,6 @@ export default function AdminLayout() {
             >
               <Menu className="w-6 h-6" />
             </button>
-            {/* Contextual Title spacing placeholder */}
           </div>
           
           <div className="flex items-center gap-4 lg:gap-8 w-full justify-end lg:justify-between lg:pl-8">
@@ -118,18 +137,52 @@ export default function AdminLayout() {
             </div>
 
             {/* Profile & Notifications */}
-            <div className="flex items-center gap-4 lg:gap-6 shrink-0">
+            <div className="flex items-center gap-4 lg:gap-6 shrink-0 relative">
               <button className="relative text-blue-400 hover:text-blue-600 transition-colors hidden sm:block">
                 <Bell className="w-6 h-6 lg:w-7 lg:h-7" />
               </button>
               
-              <div className="relative group cursor-pointer w-10 h-10 lg:w-12 lg:h-12 rounded-full overflow-hidden border-2 border-white shadow-sm ring-2 ring-transparent group-hover:ring-blue-100 transition-all">
-                <img
-                  src="https://images.unsplash.com/photo-1546456073-ea246a7bd25f?auto=format&fit=crop&q=80&w=150"
-                  alt="Admin User"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-0 right-0 w-2.5 h-2.5 lg:w-3 lg:h-3 bg-teal-400 rounded-full border-2 border-white z-10" />
+              {/* Profile Avatar & Dropdown */}
+              <div className="relative">
+                <button 
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="flex items-center gap-2 cursor-pointer focus:outline-none"
+                  aria-label="User profile menu"
+                >
+                  <div className="relative w-10 h-10 lg:w-12 lg:h-12 rounded-full overflow-hidden border-2 border-white shadow-sm ring-2 ring-gray-100 hover:ring-blue-200 transition-all">
+                    <img
+                      src="https://images.unsplash.com/photo-1546456073-ea246a7bd25f?auto=format&fit=crop&q=80&w=150"
+                      alt="Admin User"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-0 right-0 w-2.5 h-2.5 lg:w-3 lg:h-3 bg-teal-400 rounded-full border-2 border-white z-10" />
+                  </div>
+                </button>
+
+                {isProfileMenuOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-20" 
+                      onClick={() => setIsProfileMenuOpen(false)} 
+                    />
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-30">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <p className="text-xs text-gray-400 font-medium">Signed in as</p>
+                        <p className="text-sm font-semibold text-gray-800 truncate">Administrator</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 font-medium cursor-pointer transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

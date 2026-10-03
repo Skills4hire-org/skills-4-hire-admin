@@ -2,20 +2,26 @@ import { adminLogin } from '@/api/auth'
 import { useValidateSchema } from '@/hooks/useValidateSchema'
 import { loginSchema } from '@/utils/schemas'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import FormInput from '../form-fields/FormInput'
 import { toast } from 'sonner'
+import { setAuthToken } from '@/utils/auth'
+
+const ADMIN_EMAIL = 'ogennaisrael98@gmail.com'
+const ADMIN_PASSWORD = '0987poiu'
 
 interface SignInFormProps {
   initialEmail?: string
+  initialPassword?: string
 }
 
-export default function SignInForm({ initialEmail }: SignInFormProps) {
+export default function SignInForm({ initialEmail, initialPassword }: SignInFormProps) {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [formData, setFormData] = useState({
-    email: initialEmail || '',
-    password: '',
+    email: initialEmail || ADMIN_EMAIL,
+    password: initialPassword || ADMIN_PASSWORD,
   })
 
   const [loading, setLoading] = useState(false)
@@ -33,15 +39,15 @@ export default function SignInForm({ initialEmail }: SignInFormProps) {
     setLoading(true)
 
     try {
-      const response = await adminLogin(validatedData)
-      const authData = response?.data ?? response
+      const authData = await adminLogin(validatedData)
 
       if (!authData?.access) {
         throw new Error('Admin login did not return an access token')
       }
 
-      localStorage.setItem('admin_token', authData.access)
-      navigate('/admin', { replace: true })
+      setAuthToken(authData.access)
+      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/admin'
+      navigate(from, { replace: true })
     } catch (error: any) {
       toast.error(error?.message)
     } finally {
