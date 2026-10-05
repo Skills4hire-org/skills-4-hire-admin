@@ -19,11 +19,11 @@ type Post = {
   images?: string[];
 };
 
-type EngagementStats = {
-  totalUsers: number;
-  totalPosts: number;
-  totalInteractions: number;
-};
+// type EngagementStats = {
+//   totalUsers: number;
+//   totalPosts: number;
+//   totalInteractions: number;
+// };
 
 // Map raw API post to our internal Post type
 const mapApiPost = (raw: any): Post => {
@@ -63,7 +63,7 @@ export default function ContentModeration() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [stats, setStats] = useState<EngagementStats>({ totalUsers: 0, totalPosts: 0, totalInteractions: 0 });
+  // const [stats, setStats] = useState<EngagementStats>({ totalUsers: 0, totalPosts: 0, totalInteractions: 0 });
 
   const fetchPosts = async (page = 1) => {
     setLoading(true);
@@ -88,7 +88,7 @@ export default function ContentModeration() {
       setPosts(results);
       const count = data?.count ?? results.length;
       setTotalCount(count);
-      setStats(prev => ({ ...prev, totalPosts: count }));
+      // setStats(prev => ({ ...prev, totalPosts: count }));
     } catch (err) {
       console.error("ContentModeration: failed to fetch posts", err);
       setPosts([]);

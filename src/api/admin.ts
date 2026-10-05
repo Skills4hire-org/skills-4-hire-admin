@@ -278,6 +278,36 @@ export const getAdminApplicationCategories = async (params?: any) => {
   }
 };
 
+export const createAdminApplicationCategory = async (data: { name: string; [key: string]: any }) => {
+  try {
+    const response = await api.post("/api/admin/application/category/", data);
+    return response?.data;
+  } catch (error: any) {
+    console.error("createAdminApplicationCategory error:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const updateAdminApplicationCategory = async (id: string, data: { name: string; [key: string]: any }) => {
+  try {
+    const response = await api.put(`/api/admin/application/category/${id}/`, data);
+    return response?.data;
+  } catch (error: any) {
+    console.error("updateAdminApplicationCategory error:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const deleteAdminApplicationCategory = async (id: string) => {
+  try {
+    const response = await api.delete(`/api/admin/application/category/${id}/`);
+    return response?.data;
+  } catch (error: any) {
+    console.error("deleteAdminApplicationCategory error:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
 // Service Categories (list endpoint: GET /api/v1/services-categories/)
 export const getAdminServiceCategories = async (params?: any) => {
   try {

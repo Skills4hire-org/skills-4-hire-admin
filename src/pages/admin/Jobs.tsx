@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
-import { Pencil, Trash2, X, Plus, AlertCircle, ChevronLeft, ChevronRight, MapPin, Briefcase, Building2, DollarSign, Wifi } from "lucide-react";
+import { Pencil, Trash2, X, Plus, AlertCircle, ChevronLeft, ChevronRight, MapPin, Briefcase, Building2, DollarSign, Wifi, Tags } from "lucide-react";
 import {
   getAdminJobs,
   createAdminJob,
   updateAdminJob,
   deleteAdminJob,
   getAdminApplicationCategories,
-  getAdminServiceCategories,
+  createAdminApplicationCategory,
+  updateAdminApplicationCategory,
+  deleteAdminApplicationCategory,
 } from "@/api/admin";
 
 // Common currencies with symbols
@@ -52,7 +54,7 @@ type Job = {
   [key: string]: any;
 };
 
-type CategoryOption = { id: string; name: string };
+type CategoryOption = { id: string; name: string; description?: string };
 
 const inputClass =
   "w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#243cd6]/40 focus:border-[#243cd6] outline-none transition-colors text-sm";
@@ -64,6 +66,16 @@ export default function Jobs() {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ─── Category modal state ──────────────────────────────────────────────────
+  const [isCatModalOpen, setIsCatModalOpen] = useState(false);
+  const [catModalError, setCatModalError] = useState<string | null>(null);
+  const [editingCat, setEditingCat] = useState<CategoryOption | null>(null);
+  const [catFormName, setCatFormName] = useState("");
+  const [catFormDesc, setCatFormDesc] = useState("");
+  const [isCatSubmitting, setIsCatSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [formData, setFormData] = useState({
     title: "",
@@ -126,61 +138,117 @@ export default function Jobs() {
   useEffect(() => { fetchJobs(); }, []);
 
   // ─── Fetch Categories ──────────────────────────────────────────────────────
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        // Extract a plain string UUID from whatever shape the API returns for an ID field
-        const extractId = (val: any): string => {
-          if (!val && val !== 0) return "";
-          if (typeof val === "string") return val;
-          if (typeof val === "number") return String(val);
-          // val is an object — try common UUID/id field names
-          if (typeof val === "object") {
-            return String(
-              val.category_id ?? val.service_category_id ??
-              val.id ?? val.uuid ?? val.pk ?? ""
-            );
-          }
-          return String(val);
-        };
+  const fetchCategories = async () => {
+    try {
+      const res = await getAdminApplicationCategories();
+      console.log("[fetchCategories] raw response:", res);
 
-        const normalize = (raw: any[]): CategoryOption[] =>
-          raw.map((item) => ({
-            id: extractId(item.category_id ?? item.service_category_id ?? item.id ?? item),
-            name: String(item.name ?? item.category_name ?? ""),
-          })).filter(c => c.id && c.name);  // drop items with no usable id or name
-        const toArray = (res: any): any[] => {
-          if (!res) return [];
-          return Array.isArray(res)
-            ? res
-            : Array.isArray(res.results)
-            ? res.results
-            : Array.isArray(res.data?.results)
-            ? res.data.results
-            : Array.isArray(res.data)
-            ? res.data
-            : [];
-        };
-        const [appCatRes, svcCatRes] = await Promise.allSettled([
-          getAdminApplicationCategories(),
-          getAdminServiceCategories(),
-        ]);
-        const appCats = appCatRes.status === "fulfilled" ? normalize(toArray(appCatRes.value)) : [];
-        const svcCats = svcCatRes.status === "fulfilled" ? normalize(toArray(svcCatRes.value)) : [];
-        const seen = new Set<string>();
-        const merged: CategoryOption[] = [];
-        for (const cat of [...appCats, ...svcCats]) {
-          const key = cat.name.toLowerCase().trim();
-          if (!seen.has(key)) { seen.add(key); merged.push(cat); }
-        }
-        merged.sort((a, b) => a.name.localeCompare(b.name));
-        setCategories(merged);
-      } catch (err) {
-        console.error("Error fetching categories:", err);
+      const raw: any[] = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.results)
+        ? res.results
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.data?.results)
+        ? res.data.results
+        : [];
+
+      console.log("[fetchCategories] extracted array:", raw);
+
+      const cats: CategoryOption[] = raw
+        .map((item) => {
+          const id = item.category_id ?? item.id ?? item.uuid ?? item.pk ?? "";
+          const name = item.name ?? item.category_name ?? "";
+          const description = item.description ?? "";
+          return { id: String(id), name: String(name), description: String(description) };
+        })
+        .filter((c) => c.id && c.name)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      setCategories(cats);
+    } catch (err) {
+      console.error("Error fetching categories:", err);
+    }
+  };
+
+  useEffect(() => { fetchCategories(); }, []);
+
+  // ─── Category modal handlers ───────────────────────────────────────────────
+  const openCatModal = () => {
+    setEditingCat(null);
+    setCatFormName("");
+    setCatFormDesc("");
+    setCatModalError(null);
+    setIsCatModalOpen(true);
+  };
+
+  const closeCatModal = () => {
+    setIsCatModalOpen(false);
+    setEditingCat(null);
+    setCatFormName("");
+    setCatFormDesc("");
+    setCatModalError(null);
+  };
+
+  const startEditCat = (cat: CategoryOption) => {
+    setEditingCat(cat);
+    setCatFormName(cat.name);
+    setCatFormDesc((cat as any).description ?? "");
+    setCatModalError(null);
+  };
+
+  const cancelEditCat = () => {
+    setEditingCat(null);
+    setCatFormName("");
+    setCatFormDesc("");
+    setCatModalError(null);
+  };
+
+  const handleSaveCat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = catFormName.trim();
+    const description = catFormDesc.trim();
+    if (!name) { setCatModalError("Category name is required."); return; }
+    if (!description) { setCatModalError("Description is required."); return; }
+    setCatModalError(null);
+    setIsCatSubmitting(true);
+    try {
+      if (editingCat) {
+        await updateAdminApplicationCategory(editingCat.id, { name, description });
+      } else {
+        await createAdminApplicationCategory({ name, description });
       }
-    };
-    fetchCategories();
-  }, []);
+      cancelEditCat();
+      await fetchCategories();
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        Object.values(err?.response?.data?.errors || {}).flat().join(", ") ||
+        Object.values(err?.response?.data || {}).flat().join(", ") ||
+        err?.message ||
+        "Failed to save category.";
+      setCatModalError(msg);
+    } finally {
+      setIsCatSubmitting(false);
+    }
+  };
+
+  const handleDeleteCat = async (cat: CategoryOption) => {
+    if (!window.confirm(`Delete category "${cat.name}"? This cannot be undone.`)) return;
+    setCatModalError(null);
+    try {
+      await deleteAdminApplicationCategory(cat.id);
+      await fetchCategories();
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to delete category.";
+      setCatModalError(msg);
+    }
+  };
 
   // ─── Modal helpers ─────────────────────────────────────────────────────────
   const openAddModal = () => {
@@ -211,7 +279,7 @@ export default function Jobs() {
     setIsModalOpen(true);
   };
 
-  const closeModal = () => { setIsModalOpen(false); setEditingJob(null); };
+  const closeModal = () => { setIsModalOpen(false); setEditingJob(null); setModalError(null); };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -227,8 +295,9 @@ export default function Jobs() {
   // ─── Save / Delete ─────────────────────────────────────────────────────────
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    if (!formData.title.trim()) { setError("Job title is required"); return; }
+    setModalError(null);
+    if (!formData.title.trim()) { setModalError("Job title is required"); return; }
+    setIsSubmitting(true);
     try {
       const payload = {
         ...formData,
@@ -241,7 +310,7 @@ export default function Jobs() {
       };
       if (editingJob) {
         if (!editingJob.id) {
-          setError("Cannot update: job ID is missing.");
+          setModalError("Cannot update: job ID is missing.");
           return;
         }
         await updateAdminJob(editingJob.id, payload);
@@ -257,7 +326,9 @@ export default function Jobs() {
         Object.values(err?.response?.data || {}).join(", ") ||
         err?.message ||
         "Failed to save job.";
-      setError(errorMsg);
+      setModalError(errorMsg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -353,14 +424,23 @@ export default function Jobs() {
             <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">Jobs Management</h1>
             <p className="mt-1 text-sm sm:text-base text-gray-500">Create and manage job postings</p>
           </div>
-          <button
-            onClick={openAddModal}
-            className="inline-flex items-center gap-2 bg-[#243cd6] hover:bg-[#1a2fa8] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base shrink-0"
-          >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden xs:inline">Create Job</span>
-            <span className="xs:hidden">New</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={openCatModal}
+              className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 sm:px-5 py-2.5 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
+            >
+              <Tags className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden xs:inline">Categories</span>
+            </button>
+            <button
+              onClick={openAddModal}
+              className="inline-flex items-center gap-2 bg-[#243cd6] hover:bg-[#1a2fa8] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden xs:inline">Create Job</span>
+              <span className="xs:hidden">New</span>
+            </button>
+          </div>
         </div>
 
         {/* Error */}
@@ -582,6 +662,14 @@ export default function Jobs() {
             {/* Modal Body */}
             <form onSubmit={handleSave} className="p-5 space-y-4">
 
+              {/* Modal-level error */}
+              {modalError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <p className="text-red-800 text-sm">{modalError}</p>
+                </div>
+              )}
+
               {/* Job Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -718,7 +806,7 @@ export default function Jobs() {
                   Job Link
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   name="job_link"
                   value={formData.job_link}
                   onChange={handleInputChange}
@@ -760,18 +848,164 @@ export default function Jobs() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors text-sm"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2.5 bg-[#243cd6] hover:bg-[#1a2fa8] text-white rounded-lg font-medium transition-colors text-sm"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2.5 bg-[#243cd6] hover:bg-[#1a2fa8] text-white rounded-lg font-medium transition-colors text-sm disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {editingJob ? "Update Job" : "Create Job"}
+                  {isSubmitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      {editingJob ? "Updating…" : "Creating…"}
+                    </>
+                  ) : (
+                    editingJob ? "Update Job" : "Create Job"
+                  )}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* ── Categories Modal ─────────────────────────────────────────────────── */}
+      {isCatModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-xl w-full sm:max-w-lg max-h-[92dvh] flex flex-col">
+
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 relative shrink-0">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-gray-300 rounded-full sm:hidden" />
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">Job Categories</h2>
+              <button
+                onClick={closeCatModal}
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Error */}
+            {catModalError && (
+              <div className="mx-5 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 shrink-0">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <p className="text-red-800 text-sm">{catModalError}</p>
+              </div>
+            )}
+
+            {/* Category List */}
+            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2 min-h-0">
+              {categories.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-6">No categories yet. Create one below.</p>
+              ) : (
+                categories.map((cat) => (
+                  <div key={cat.id}>
+                    {editingCat?.id === cat.id ? (
+                      /* Inline edit form */
+                      <form onSubmit={handleSaveCat} className="p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+                        <input
+                          type="text"
+                          value={catFormName}
+                          onChange={(e) => setCatFormName(e.target.value)}
+                          autoFocus
+                          className="w-full px-3 py-1.5 border border-blue-300 rounded-md text-sm focus:ring-2 focus:ring-[#243cd6]/40 focus:border-[#243cd6] outline-none"
+                          placeholder="Category name"
+                        />
+                        <textarea
+                          value={catFormDesc}
+                          onChange={(e) => setCatFormDesc(e.target.value)}
+                          rows={2}
+                          className="w-full px-3 py-1.5 border border-blue-300 rounded-md text-sm focus:ring-2 focus:ring-[#243cd6]/40 focus:border-[#243cd6] outline-none resize-none"
+                          placeholder="Description"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="submit"
+                            disabled={isCatSubmitting}
+                            className="px-3 py-1.5 bg-[#243cd6] text-white text-sm rounded-md hover:bg-[#1a2fa8] disabled:opacity-60 transition-colors font-medium"
+                          >
+                            {isCatSubmitting ? "Saving…" : "Save"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditCat}
+                            disabled={isCatSubmitting}
+                            className="px-3 py-1.5 border border-gray-300 text-gray-600 text-sm rounded-md hover:bg-gray-100 disabled:opacity-60 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      /* Category row */
+                      <div className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-50 group">
+                        <span className="text-sm text-gray-800 font-medium">{cat.name}</span>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => startEditCat(cat)}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCat(cat)}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Create new category form */}
+            {!editingCat && (
+              <div className="px-5 py-4 border-t border-gray-100 shrink-0">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">New Category</p>
+                <form onSubmit={handleSaveCat} className="space-y-2">
+                  <input
+                    type="text"
+                    value={catFormName}
+                    onChange={(e) => setCatFormName(e.target.value)}
+                    placeholder="Category name"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#243cd6]/40 focus:border-[#243cd6] outline-none transition-colors"
+                  />
+                  <textarea
+                    value={catFormDesc}
+                    onChange={(e) => setCatFormDesc(e.target.value)}
+                    placeholder="Description"
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#243cd6]/40 focus:border-[#243cd6] outline-none transition-colors resize-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isCatSubmitting}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#243cd6] hover:bg-[#1a2fa8] text-white text-sm rounded-lg font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isCatSubmitting ? (
+                      <>
+                        <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        Adding…
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-3.5 h-3.5" />
+                        Add Category
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       )}
